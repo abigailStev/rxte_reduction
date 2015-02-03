@@ -5,12 +5,16 @@ import matplotlib.pyplot as plt
 import os
 import tools
 
+__author__ = "Abigail Stevens"
+__author_email__ = "A.L.Stevens@uva.nl"
+__year__ = "2014-2015"
+__description__ = "Plots the time-domain light curve of Standard-2 RXTE PCA \
+data."
+
 """
 		plot_std2_lightcurve.py
-		
-Plots the time-domain light curve of Standard-2 RXTE data.
 
-Written in Python 2.7 by A.L. Stevens, A.L.Stevens@uva.nl, 2014
+Written in Python 2.7.
 
 All modules imported above, as well as python 2.7, can be downloaded in the 
 Anaconda package. See https://store.continuum.io/cshop/anaconda/
@@ -25,7 +29,7 @@ def main(propID, obsID_list_file, plot_file):
 	file_prefix = "/".join(file_path[0:len(file_path)-1])+"/Reduced_data/"+propID
 	obsID_list = [line.strip() for line in open(obsID_list_file)]
 	start_time = np.float64(tools.get_key_val(file_prefix+"/"+obsID_list[0]+"/std2.lc", 0, "TSTART"))
-	print "%.15f" % start_time
+	print "%.21f" % start_time
 	
 	end_time = 0
 	fig, ax = plt.subplots()
@@ -85,7 +89,7 @@ def main(propID, obsID_list_file, plot_file):
 # 	plt.show()
 	plt.close()
 	
-	## End of function 'main'
+## End of function 'main'
 
 
 ##########################
