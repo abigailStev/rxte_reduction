@@ -10,20 +10,25 @@
 ###############################################################################
 echo "Running event_mode_bkgd.sh"
 
-propID=$1
-out_dir=$2
-list_dir=$3
-all_evt=$4
-filter_file=$5
+## Make sure the input arguments are ok
+if (( $# != 4 )); then
+    echo -e "\t\tUsage: ./event_mode_bkgd.sh <output dir> <evt bkgd list> <total evt spectrum> <progress log>"
+    exit
+fi
 
-bkgd_list="$list_dir/${propID}_all_bkgd.lst"
-# echo "$bkgd_list"
-# echo "$out_dir"
-ls $out_dir/*/*_evt_bkgd.pha > $bkgd_list
+out_dir=$1
+bkgd_list=$2
+all_evt=$3
+progress_log=$4
+
+
+home_dir=$(ls -d ~)  # the -d flag is extremely important here
+list_dir="$home_dir/Dropbox/Lists"
+filter_file="$out_dir/all.xfl"
+open "$bkgd_list"
 cp "$bkgd_list" "$out_dir/all_event_bkgd.lst"
 
 ub_bkgd="$out_dir/evt_bkgd_notbinned"
-
 
 cd "$out_dir"
 
@@ -94,7 +99,7 @@ else
 	## Now summing the sum groups of bkgd pha files
 	temp_evt_bkgd="temp_evt_bkgd_total"
 	if [ -e "$temp_evt_bkgd.pha" ]; then rm "$temp_evt_bkgd.pha"; fi
-	open "$as_sums"
+# 	open "$as_sums"
 	addspec infil="$as_sums" \
 		outfil="$temp_evt_bkgd" \
 		qaddrmf=no \
@@ -105,6 +110,7 @@ else
 		mv "$temp_evt_bkgd.pha" "$ub_bkgd.pha"
 	else
 		echo -e "\tERROR: addspec failed."
+		echo -e "\tERROR: addspec failed." >> $progress_log
 	fi
 	
 	cd "$out_dir"
@@ -112,8 +118,8 @@ else
 fi
 
 if [ ! -e "$ub_bkgd.pha" ]; then
-	echo -e "\tERROR: $ub_bkgd.pha not created."
-	echo -e "\tERROR: $ub_bkgd.pha not created." >> $progress_log
+	echo -e "\tERROR: Adding the individual event-mode background spectra did not work."
+	echo -e "\tERROR: Adding the individual event-mode background spectra did not work." >> $progress_log
 fi
 
 echo "Background spectrum: $ub_bkgd.pha"
@@ -128,7 +134,8 @@ elif [ -e "$all_evt" ]; then
 	pcarsp -f "$all_evt" -a "$filter_file" -l all -j y -p 2 -m n -n "$rsp_matrix" -z > $rsp_dump_file
 # 	pcarsp -f "$all_evt" -a "$filter_file" -l all -j y -p 2 -m n -n "$rsp_matrix" -z
 else
-	echo -e "\tERROR: $all_evt does NOT exist. pcarsp was NOT run."
+	echo -e "\tERROR: pcarsp was not run. Event-mode spectrum of all obsIDs does not exist."
+	echo -e "\tERROR: pcarsp was not run. Event-mode spectrum of all obsIDs does not exist." >> $progress_log
 fi
 
 rb_bkgd="$out_dir/evt_bkgd_rebinned.pha"
@@ -140,5 +147,6 @@ if [ -e "${ub_bkgd}.pha" ] && [ -e "$out_dir/chan.txt" ] ; then
 		chatter=4 \
 		clobber=yes
 else
-	echo -e "\tERROR: ${ub_bkgd}.pha and/or $out_dir/chan.txt do NOT exist. rbnpha was NOT run."
+	echo -e "\tERROR: rbnpha was not run. Summed event-mode background spectrum and/or chan.txt do not exist."
+	echo -e "\tERROR: rbnpha was not run. Summed event-mode background spectrum and/or chan.txt do not exist." >> $progress_log
 fi
