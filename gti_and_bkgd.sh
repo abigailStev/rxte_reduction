@@ -1,11 +1,13 @@
 #! /bin/bash
+
 ###############################################################################
 ## 
-## Make GTI file and background file for rxte_reduce_data.sh
-## Runs HEASOFT scripts maketime and pcabackest, and Abbie's tools.py
+## Make GTI file, background file, and extract background spectrum per obsID.
+##
 ## Inspired by G. Lamer (gl@astro.soton.ac.uk)'s script 'getgtibackxrb'
 ##     or maybe Phil wrote the c-shell version, it's unclear.
 ## 
+## Abigail Stevens, A.L.Stevens@uva.nl, 2014-2015 
 ## 
 ###############################################################################
 
@@ -28,9 +30,13 @@ fi
 
 filter_file="$out_dir/filter.xfl"
 gti_file="$out_dir/gti_file.gti"
-home_dir=$(ls -d ~)  # the -d flag is extremely important here
+home_dir=$(ls -d ~) 
 list_dir="$home_dir/Dropbox/Lists"
 script_dir="$home_dir/Dropbox/Research/rxte_reduce"
+
+#######################################
+## Making the GTI from the filter file
+#######################################
 
 echo "Now making GTI and background for std2 and event mode."
 
@@ -60,11 +66,26 @@ if [ ! -e "$gti_file" ]; then
 	echo -e "\tERROR: Maketime failed. $gti_file was not created." >> $progress_log
 fi
 
+##############################################################################
+## Looping through the Standard-2 files to make a background and extract a 
+## background spectrum for each of them. Two different backgrounds are made 
+## because Standard-2 and event-mode backgrounds require different flags.
+##############################################################################
+
+cp "$list_dir"/std2_pcu2_cols.lst ./tmp_std2_pcu2_cols.lst
+
 for std2_pca_file in $(ls $out_dir/"std2"*.pca); do
 	
-		## Use these with standard 1 or 2 data -- don't have gain correction applied.
-		std2_bkgd=${std2_pca_file%.*}"_std2.bkgd"
-		echo "std2 bkgd file = $std2_bkgd"
+	## These bkgd files don't have gain correction applied. Use them with
+	## Standard-2 or Standard-1b data.
+	echo "Making Standard-2 background."
+	echo "Making Standard-2 background." >> $progress_log
+	std2_bkgd=${std2_pca_file%.*}"_std2.bkgd"
+	echo "std2 bkgd file = $std2_bkgd"
+	
+	if [ -e "$std2_pca_file" ] && [ -e "bkgd_model" ] && \
+		[ -e "$filter_file" ] && [ -e "$saa_history" ]; then
+		
 		pcabackest infile=$std2_pca_file \
 			outfile=$std2_bkgd \
 			modelfile=$bkgd_model \
@@ -75,48 +96,47 @@ for std2_pca_file in $(ls $out_dir/"std2"*.pca); do
 			gaincorr=no \
 			fullspec=no \
 			clobber=yes  	
+	fi
+	
+	if [ -e "$std2_bkgd" ]; then
 		
-		if [ -e "$std2_bkgd" ]; then
-			cols="$out_dir/std2_pcu2_cols.pcu"
-			cat "$list_dir"/std2_pcu2_cols.lst > "$cols"
+		## Extract a spectrum from the Standard-2 background file
+		saextrct lcbinarray=10000000 \
+			maxmiss=200 \
+			infile=$std2_bkgd \
+			gtiorfile=- \
+			gtiandfile="$gti_file" \
+			outroot="${std2_bkgd%.*}_bkgd" \
+			columns=@tmp_std2_pcu2_cols.lst \
+			accumulate=ONE \
+			timecol="Time" \
+			binsz=16 \
+			mfracexp=INDEF \
+			printmode=SPECTRUM \
+			lcmode=RATE \
+			spmode=SUM \
+			mlcinten=INDEF \
+			mspinten=INDEF \
+			writesum=- \
+			writemean=- \
+			timemin=INDEF \
+			timemax=INDEF \
+			timeint=INDEF \
+			chmin=INDEF \
+			chmax=INDEF \
+			chint=INDEF \
+			chbin=INDEF \
+			dryrun=no \
+			clobber=yes
 			
-			## Extract a spectrum from the Standard Mode 2 background file
-			saextrct lcbinarray=10000000 \
-				maxmiss=200 \
-				infile=$std2_bkgd \
-				gtiorfile=- \
-				gtiandfile="$gti_file" \
-				outroot="${std2_bkgd%.*}_bkgd" \
-				columns=@"$cols" \
-				accumulate=ONE \
-				timecol="Time" \
-				binsz=16 \
-				mfracexp=INDEF \
-				printmode=SPECTRUM \
-				lcmode=RATE \
-				spmode=SUM \
-				mlcinten=INDEF \
-				mspinten=INDEF \
-				writesum=- \
-				writemean=- \
-				timemin=INDEF \
-				timemax=INDEF \
-				timeint=INDEF \
-				chmin=INDEF \
-				chmax=INDEF \
-				chint=INDEF \
-				chbin=INDEF \
-				dryrun=no \
-				clobber=yes
-				
-			if [ ! -e "${std2_bkgd%.*}_bkgd.pha" ]; then
-				echo -e "\tERROR: Standard-2 background spectrum not extracted."
-				echo -e "\tERROR: Standard-2 background spectrum not extracted." >> $progress_log
-			fi
-		else
-			echo -e "\tERROR: Standard-2 background file not made."
-			echo -e "\tERROR: Standard-2 background file not made." >> $progress_log
+		if [ ! -e "${std2_bkgd%.*}_bkgd.pha" ]; then
+			echo -e "\tERROR: Standard-2 background spectrum not extracted."
+			echo -e "\tERROR: Standard-2 background spectrum not extracted." >> $progress_log
 		fi
+	else
+		echo -e "\tERROR: Standard-2 background file not made."
+		echo -e "\tERROR: Standard-2 background file not made." >> $progress_log
+	fi
 		
 		
 	## These bkgd files are made with the gain correction and full 256 channels,
@@ -126,33 +146,34 @@ for std2_pca_file in $(ls $out_dir/"std2"*.pca); do
 	echo "Making event-mode background." >> $progress_log
 	event_bkgd="${std2_pca_file%.*}_evt.bkgd"
 	echo "event bkgd file = $event_bkgd"
-	
-	pcabackest infile=$std2_pca_file \
-		outfile=$event_bkgd \
-		modelfile=$bkgd_model \
-		filterfile=$filter_file \
-		layers=yes \
-		saahfile=$saa_history \
-		interval=16 \
-		gaincorr=yes \
-		gcorrfile=caldb \
-		fullspec=yes \
-		clobber=yes
+
+	if [ -e "$std2_pca_file" ] && [ -e "bkgd_model" ] && \
+		[ -e "$filter_file" ] && [ -e "$saa_history" ]; then
+		
+		pcabackest infile=$std2_pca_file \
+			outfile=$event_bkgd \
+			modelfile=$bkgd_model \
+			filterfile=$filter_file \
+			layers=yes \
+			saahfile=$saa_history \
+			interval=16 \
+			gaincorr=yes \
+			gcorrfile=caldb \
+			fullspec=yes \
+			clobber=yes
+	fi
 	
 	if [ -e "$event_bkgd" ]; then
 		echo "$event_bkgd"
-		cols="$out_dir/std2_pcu2_cols.pcu"
-		cp "$list_dir"/std2_pcu2_cols.lst "$cols"
-		echo "$cols"
-# 		open "$cols"
-		## Extract a spectrum from the event mode background file
+
+		## Extract a spectrum from the event-mode background file
 		saextrct lcbinarray=10000000 \
 			maxmiss=200 \
 			infile=$event_bkgd \
 			gtiorfile=- \
 			gtiandfile="$gti_file" \
 			outroot="${event_bkgd%.*}_bkgd" \
-			columns=@"$cols" \
+			columns=@tmp_std2_pcu2_cols.lst \
 			accumulate=ONE \
 			timecol="Time" \
 			binsz=16 \
@@ -200,8 +221,16 @@ for std2_pca_file in $(ls $out_dir/"std2"*.pca); do
 # 			gaincorr=no \
 # 			fullspec=yes \
 # 			clobber=yes  
-# 
+
 done
 
-echo "Finished making GTI and std2 background."
-echo "Finished making GTI and std2 background." >> $progress_log
+###############################################################################
+## All done!
+
+## Deleting the temp file(s)
+rm tmp_std2_pcu2_cols.lst
+
+echo "Finished making GTI and background."
+echo "Finished making GTI and background." >> $progress_log
+
+###############################################################################
