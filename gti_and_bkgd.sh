@@ -44,15 +44,14 @@ bin_loc=$(python -c "from tools import get_key_val; print get_key_val('$filter_f
 echo "TIMEPIXR = $bin_loc"
 
 if (( bin_loc == 0 )); then
-# 	echo "In here 1"
 	maketime infile=$filter_file outfile=$gti_file expr=$filtex name=NAME \
 		value=VALUE time=Time compact=no clobber=yes prefr=0.0 postfr=1.0
 elif (( bin_loc == 1 )); then
-# 	echo "In here 2"
 	maketime infile=$filter_file outfile=$gti_file expr=$filtex name=NAME \
 		value=VALUE time=Time compact=no clobber=yes prefr=1.0 postfr=0.0
 else
-# 	echo "In here 3"
+	echo "Warning: TIMEPIXR is neither 0 nor 1. Setting prefr=postfr=0.5."
+	echo "Warning: TIMEPIXR is neither 0 nor 1. Setting prefr=postfr=0.5." >> $progress_log
 	maketime infile=$filter_file outfile=$gti_file expr=$filtex name=NAME \
 		value=VALUE time=Time compact=no clobber=yes prefr=0.5 postfr=0.5
 fi
@@ -62,64 +61,64 @@ if [ ! -e "$gti_file" ]; then
 fi
 
 for std2_pca_file in $(ls $out_dir/"std2"*.pca); do
-# 	
-# 		## Use these with standard 1 or 2 data -- don't have gain correction applied.
-# 		std2_bkgd=${std2_pca_file%.*}"_std2.bkgd"
-# 		echo "std2 bkgd file = $std2_bkgd"
-# 		pcabackest infile=$std2_pca_file \
-# 			outfile=$std2_bkgd \
-# 			modelfile=$bkgd_model \
-# 			filterfile=$filter_file \
-# 			layers=yes \
-# 			saahfile=$saa_history \
-# 			interval=16 \
-# 			gaincorr=no \
-# 			fullspec=no \
-# 			clobber=yes  	
-# 		
-# 		if [ -e "$std2_bkgd" ]; then
-# 			cols="$out_dir/std2_pcu2_cols.pcu"
-# 			cat "$list_dir"/std2_pcu2_cols.lst > "$cols"
-# 			
-# 			## Extract a spectrum from the Standard Mode 2 background file
-# 			saextrct lcbinarray=10000000 \
-# 				maxmiss=200 \
-# 				infile=$std2_bkgd \
-# 				gtiorfile=- \
-# 				gtiandfile="$gti_file" \
-# 				outroot="${std2_bkgd%.*}_bkgd" \
-# 				columns=@"$cols" \
-# 				accumulate=ONE \
-# 				timecol=TIME \
-# 				binsz=16 \
-# 				mfracexp=INDEF \
-# 				printmode=SPECTRUM \
-# 				lcmode=RATE \
-# 				spmode=SUM \
-# 				mlcinten=INDEF \
-# 				mspinten=INDEF \
-# 				writesum=- \
-# 				writemean=- \
-# 				timemin=INDEF \
-# 				timemax=INDEF \
-# 				timeint=INDEF \
-# 				chmin=INDEF \
-# 				chmax=INDEF \
-# 				chint=INDEF \
-# 				chbin=INDEF \
-# 				dryrun=no \
-# 				clobber=yes
-# 				
-# 			if [ ! -e "${std2_bkgd%.*}_bkgd.pha" ]; then
-# 				echo -e "\tERROR: Standard-2 background spectrum not extracted."
-# 				echo -e "\tERROR: Standard-2 background spectrum not extracted." >> $progress_log
-# 			fi
-# 		else
-# 			echo -e "\tERROR: Standard-2 background file not made."
-# 			echo -e "\tERROR: Standard-2 background file not made." >> $progress_log
-# 		fi
-# 		
-# 		
+	
+		## Use these with standard 1 or 2 data -- don't have gain correction applied.
+		std2_bkgd=${std2_pca_file%.*}"_std2.bkgd"
+		echo "std2 bkgd file = $std2_bkgd"
+		pcabackest infile=$std2_pca_file \
+			outfile=$std2_bkgd \
+			modelfile=$bkgd_model \
+			filterfile=$filter_file \
+			layers=yes \
+			saahfile=$saa_history \
+			interval=16 \
+			gaincorr=no \
+			fullspec=no \
+			clobber=yes  	
+		
+		if [ -e "$std2_bkgd" ]; then
+			cols="$out_dir/std2_pcu2_cols.pcu"
+			cat "$list_dir"/std2_pcu2_cols.lst > "$cols"
+			
+			## Extract a spectrum from the Standard Mode 2 background file
+			saextrct lcbinarray=10000000 \
+				maxmiss=200 \
+				infile=$std2_bkgd \
+				gtiorfile=- \
+				gtiandfile="$gti_file" \
+				outroot="${std2_bkgd%.*}_bkgd" \
+				columns=@"$cols" \
+				accumulate=ONE \
+				timecol="Time" \
+				binsz=16 \
+				mfracexp=INDEF \
+				printmode=SPECTRUM \
+				lcmode=RATE \
+				spmode=SUM \
+				mlcinten=INDEF \
+				mspinten=INDEF \
+				writesum=- \
+				writemean=- \
+				timemin=INDEF \
+				timemax=INDEF \
+				timeint=INDEF \
+				chmin=INDEF \
+				chmax=INDEF \
+				chint=INDEF \
+				chbin=INDEF \
+				dryrun=no \
+				clobber=yes
+				
+			if [ ! -e "${std2_bkgd%.*}_bkgd.pha" ]; then
+				echo -e "\tERROR: Standard-2 background spectrum not extracted."
+				echo -e "\tERROR: Standard-2 background spectrum not extracted." >> $progress_log
+			fi
+		else
+			echo -e "\tERROR: Standard-2 background file not made."
+			echo -e "\tERROR: Standard-2 background file not made." >> $progress_log
+		fi
+		
+		
 	## These bkgd files are made with the gain correction and full 256 channels,
 	## they should be used when data is not good xenon or standard 1 or 2
 	## Use this for event-mode data! need to re-bin once i've extracted a spectrum
@@ -155,7 +154,7 @@ for std2_pca_file in $(ls $out_dir/"std2"*.pca); do
 			outroot="${event_bkgd%.*}_bkgd" \
 			columns=@"$cols" \
 			accumulate=ONE \
-			timecol=TIME \
+			timecol="Time" \
 			binsz=16 \
 			mfracexp=INDEF \
 			printmode=SPECTRUM \
