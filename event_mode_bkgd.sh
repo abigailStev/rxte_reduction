@@ -2,13 +2,14 @@
 
 ###############################################################################
 ##
-## Create a background spectrum for all of the event-mode data 
+## Create a background spectrum for all of the event-mode data by summing the
+## event-mode background spectra from all the obsIDs in the list, re-binning it
+## by energy channel, and making the response matrix for good measure (which
+## also creates chan.txt, the file telling how to re-bin the energy channels).
 ## 
-## Notes: heainit needs to already be running!
-## 
+## Abigail Stevens, A.L.Stevens@uva.nl, 2014-2015 
 ## 
 ###############################################################################
-echo "Running event_mode_bkgd.sh"
 
 ## Make sure the input arguments are ok
 if (( $# != 4 )); then
@@ -21,19 +22,27 @@ bkgd_list=$2
 all_evt=$3
 progress_log=$4
 
+## If heainit isn't running, start it
+if (( $(echo $DYLD_LIBRARY_PATH | grep heasoft | wc -l) < 1 )); then
+	. $HEADAS/headas-init.sh
+fi
+
+echo "Running event_mode_bkgd.sh"
+echo "Running event_mode_bkgd.sh" >> $progress_log
 
 home_dir=$(ls -d ~)  # the -d flag is extremely important here
 list_dir="$home_dir/Dropbox/Lists"
 filter_file="$out_dir/all.xfl"
-open "$bkgd_list"
 cp "$bkgd_list" "$out_dir/all_event_bkgd.lst"
 
 ub_bkgd="$out_dir/evt_bkgd_notbinned"
 
 cd "$out_dir"
 
+#############################################################################
 ## This is a work-around. Should probably write my own script so that I can
 ## add up more than 35 pha files!! Generally, need to do this part by hand.
+#############################################################################
 
 ## If there's only one event file, don't need to add bkgd spectra. 
 ## If not, add them.
@@ -76,17 +85,14 @@ else
 			as_list="addspec_list_${i}.lst"
 			if [ -e "$as_list" ]; then rm "$as_list"; fi; touch "$as_list"
 		fi
-# 			echo "j = $j"
 		(( j+=1 ))
 
 	done
 	
 	## Doing the last leg (since it doesn't get done otherwise)
 	if (( j % 10 != 0 )); then
-# 		echo -e "\ti = $i"
 		temp_evt_bkgd="temp_evt_bkgd_${i}"
 		if [ -e "$temp_evt_bkgd.pha" ]; then rm "$temp_evt_bkgd.pha"; fi
-# 		open "$as_list"
 
 		addspec infil="$as_list" \
 			outfil="$temp_evt_bkgd" \
@@ -96,10 +102,13 @@ else
 		echo "$temp_evt_bkgd.pha" >> $as_sums
 	fi
 	
+	################################################
 	## Now summing the sum groups of bkgd pha files
+	################################################
+
 	temp_evt_bkgd="temp_evt_bkgd_total"
 	if [ -e "$temp_evt_bkgd.pha" ]; then rm "$temp_evt_bkgd.pha"; fi
-# 	open "$as_sums"
+	
 	addspec infil="$as_sums" \
 		outfil="$temp_evt_bkgd" \
 		qaddrmf=no \
@@ -109,12 +118,12 @@ else
 	if [ -e "$temp_evt_bkgd.pha" ]; then
 		mv "$temp_evt_bkgd.pha" "$ub_bkgd.pha"
 	else
-		echo -e "\tERROR: addspec failed."
-		echo -e "\tERROR: addspec failed." >> $progress_log
+		echo -e "\tERROR: addspec of sums failed."
+		echo -e "\tERROR: addspec of sums failed." >> $progress_log
 	fi
 	
 	cd "$out_dir"
-	rm -rf "$asdir"
+	rm -rf "$asdir"  ## Removing the temporary directory
 fi
 
 if [ ! -e "$ub_bkgd.pha" ]; then
@@ -124,20 +133,31 @@ fi
 
 echo "Background spectrum: $ub_bkgd.pha"
 
-rsp_dump_file="rsp_matrix_dump.dat"
+###########################
+## Making response matrix
+###########################
+
+echo "Making a response matrix."
+echo "Making a response matrix." >> $progress_log
 rsp_matrix="$out_dir/PCU2.rsp"
 
-## Making response matrix
-if [ -e "$rsp_matrix" ]; then
-	echo "$rsp_matrix already exists."
-elif [ -e "$all_evt" ]; then
-	pcarsp -f "$all_evt" -a "$filter_file" -l all -j y -p 2 -m n -n "$rsp_matrix" -z > $rsp_dump_file
-# 	pcarsp -f "$all_evt" -a "$filter_file" -l all -j y -p 2 -m n -n "$rsp_matrix" -z
+# if [ -e "$rsp_matrix" ]; then
+# 	echo "Response matrix already exists."
+# elif [ -e "$all_evt" ]; then
+if [ -e "$all_evt" ]; then
+	pcarsp -f "$all_evt" -a "$filter_file" -l all -j y -p 2 -m n -n "$rsp_matrix" -z
 else
 	echo -e "\tERROR: pcarsp was not run. Event-mode spectrum of all obsIDs does not exist."
 	echo -e "\tERROR: pcarsp was not run. Event-mode spectrum of all obsIDs does not exist." >> $progress_log
 fi
 
+##########################################################################
+## Re-binning the background file to have the same energy channels as an 
+## event-mode spectrum
+##########################################################################
+
+echo "Re-binning the event-mode background spectrum."
+echo "Re-binning the event-mode background spectrum." >> $progress_log
 rb_bkgd="$out_dir/evt_bkgd_rebinned.pha"
 
 if [ -e "${ub_bkgd}.pha" ] && [ -e "$out_dir/chan.txt" ] ; then
@@ -150,3 +170,14 @@ else
 	echo -e "\tERROR: rbnpha was not run. Summed event-mode background spectrum and/or chan.txt do not exist."
 	echo -e "\tERROR: rbnpha was not run. Summed event-mode background spectrum and/or chan.txt do not exist." >> $progress_log
 fi
+
+###############################################################################
+## All done!
+
+## Deleting temporary file(s)
+rm "$bkgd_list"
+
+echo "Finished running event_mode_bkgd.sh."
+echo "Finished running event_mode_bkgd.sh." >> $progress_log
+
+###############################################################################
