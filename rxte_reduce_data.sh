@@ -76,7 +76,7 @@ if [ -e "$sa_list" ]; then rm "$sa_list"; fi; touch "$sa_list"
 
 echo "prefix = ${prefix}"
 
-num_newfiles=$(wc -l < $newfilelist)
+num_newfiles=$( wc -l < $newfilelist )
 current_file_num=1
 echo "Number of new files: $num_newfiles"
 
@@ -84,7 +84,7 @@ echo "Number of new files: $num_newfiles"
 ## Looping through each 'newfile' in 'newfilelist'
 ###############################################################################
 
-for newfile in $(cat $newfilelist); do
+for newfile in $( cat $newfilelist ); do
 	
 	echo "ObsID $current_file_num/$num_newfiles" >> $progress_log
 	obs_dir=$( dirname `dirname ${newfile}` )  ## Where the observation is stored
@@ -117,9 +117,9 @@ for newfile in $(cat $newfilelist); do
 			-c   
 		
 		if [ ! -e "$filter_file" ]; then  ## Filter file wasn't made; Give error
-			echo -e "\tERROR: $filter_file not made! Exiting."
-			echo -e "\tERROR: $filter_file not made! Exiting." >> $progress_log
-			exit
+			echo -e "\tERROR: Filter file not made!"
+			echo -e "\tERROR: Filter file not made!" >> $progress_log
+			continue
 		fi
 		
 		echo "Filter file made." >> $progress_log
@@ -139,11 +139,12 @@ for newfile in $(cat $newfilelist); do
 	if (( $num_std2 == 0 )); then  ## num_std2 = 0; Give error
 		echo -e "\tNo Standard2 files for this obsID."
 		echo -e "\tNo Standard2 files for this obsID." >> $progress_log
-		break
+		continue
 	fi
 			
 	m=1
-	for std2file in $(ls "$obs_dir"/pca/FS4a*); do  ## For each FS4a (std 2) file
+	## For each FS4a (Standard-2) file
+	for std2file in $( ls "$obs_dir"/pca/FS4a* ); do 
 	
 		echo "std2file = $std2file"
 		echo "m = $m"
@@ -168,11 +169,12 @@ for newfile in $(cat $newfilelist); do
 	if (( $num_evt == 0 )); then  ## num_evt = 0; Give error
 		echo -e "\tNo event-mode files for this obsID."
 		echo -e "\tNo event-mode files for this obsID." >> $progress_log
-		break
+		continue
 	fi
 
 	m=1
-	for eventfile in $(ls "$obs_dir"/pca/"${mode_prefix}"*); do  ## For each event mode file
+	## For each event-mode file
+	for eventfile in $( ls "$obs_dir"/pca/"${mode_prefix}"* ); do  
 
 		echo "eventfile = $eventfile"
 		echo "m = $m"
@@ -217,7 +219,8 @@ for newfile in $(cat $newfilelist); do
 	echo -e "Finished run for obsID=$obsID \n"				
 	echo -e "Finished run for obsID=$obsID \n" >> $progress_log
 	(( current_file_num++ ))
-	break
+	
+# 	break
 done  ## End for-loop of each newfile in newfilelist
 ###############################################################################
 
@@ -247,8 +250,8 @@ fmerge infiles=@"$filters_ordered" \
 	clobber=yes
 
 if [ ! -e "$filter_file" ] ; then
-	echo -e "\tERROR: $filter_file not made! Exiting."
-	echo -e "\tERROR: $filter_file not made! Exiting." >> $progress_log
+	echo -e "\tERROR: fmerge did not work, total filter file not made. Exiting."
+	echo -e "\tERROR: fmerge did not work, total filter file not made. Exiting." >> $progress_log
 	exit
 fi
 
@@ -275,8 +278,8 @@ else
 fi
 
 if [ ! -e "$gti_file" ] ; then
-	echo -e "\tERROR: $gti_file not made! Exiting."
-	echo -e "\tERROR: $gti_file not made! Exiting." >> $progress_log
+	echo -e "\tERROR: Total GTI file not made. Exiting."
+	echo -e "\tERROR: Total GTI file not made. Exiting." >> $progress_log
 	exit
 fi
 
@@ -314,8 +317,8 @@ else
 		mode=ql
 
 	if [ ! -e "$all_evt" ] ; then
-		echo -e "\tERROR: $all_evt not made! Exiting."
-		echo -e "\tERROR: $all_evt not made! Exiting." >> $progress_log
+		echo -e "\tERROR: Total event-mode spectrum not made!"
+		echo -e "\tERROR: Total event-mode spectrum not made!" >> $progress_log
 	# 	exit
 	fi  ## End 'if $all_evt not made', i.e. if seextrct failed
 fi
@@ -364,14 +367,14 @@ else
 	if [ -e $dump_file ] ; then rm -f $dump_file; fi
 
 	if [ ! -e "${all_std2%.*}.lc" ] ; then
-		echo -e "\tERROR: ${all_std2%.*}.lc not made!"
-		echo -e "\tERROR: ${all_std2%.*}.lc not made!" >> $progress_log
-	fi  ## End 'if ${all_std2%.*}.lc not made', i.e. if saextrct failed
+		echo -e "\tERROR: Total Standard-2 light curve not made!"
+		echo -e "\tERROR: Total Standard-2 light curve not made!" >> $progress_log
+	fi  ## End 'if lightcurve not made', i.e. if saextrct failed
 	if [ ! -e "$all_std2" ] ; then
-		echo -e "\tERROR: $all_std2 not made! Exiting."
-		echo -e "\tERROR: $all_std2 not made! Exiting." >> $progress_log
+		echo -e "\tERROR: Total Standard-2 spectrum not made!"
+		echo -e "\tERROR: Total Standard-2 spectrum not made!" >> $progress_log
 # 		exit
-	fi  ## End 'if $all_std2 not made', i.e. if saextrct failed
+	fi  ## End 'if spectrum not made', i.e. if saextrct failed
 fi  ## End 'if there are std2 files in $sa_list'
 
 echo "Done with total extractions."

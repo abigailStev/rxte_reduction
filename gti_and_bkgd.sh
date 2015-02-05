@@ -62,8 +62,9 @@ else
 		value=VALUE time=Time compact=no clobber=yes prefr=0.5 postfr=0.5
 fi
 if [ ! -e "$gti_file" ]; then
-	echo -e "\tERROR: Maketime failed. $gti_file was not created."
-	echo -e "\tERROR: Maketime failed. $gti_file was not created." >> $progress_log
+	echo -e "\tERROR: Maketime failed. GTI file was not created."
+	echo -e "\tERROR: Maketime failed. GTI file was not created." >> $progress_log
+	continue
 fi
 
 ##############################################################################
@@ -204,7 +205,7 @@ for std2_pca_file in $(ls $out_dir/"std2"*.pca); do
 	else
 		echo -e "\tERROR: Event-mode background file not made."
 		echo -e "\tERROR: Event-mode background file not made." >> $progress_log
-# 		exit
+# 		continue
 	fi
 # 			
 # 		## Good Xenon bkgd files are made with the full 256 channels but no gain

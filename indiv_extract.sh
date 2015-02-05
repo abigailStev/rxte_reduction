@@ -56,6 +56,7 @@ if [ -e $dump_file ]; then rm -f $dump_file; fi
 if [ ! -e "$out_dir/std2.pha" ]; then
 	echo -e "\tERROR: $out_dir/std2.pha not made!"
 	echo -e "\tERROR: $out_dir/std2.pha not made!" >> $progress_log
+# 	continue
 fi  ## End 'if $out_dir/std2.pha files not made', i.e. if saextrct failed
 
 ls $out_dir/vle*.pca > "$out_dir/vle.lst"
@@ -135,10 +136,12 @@ seextrct infile=@"$out_dir/evt.lst" \
 if [ ! -e "$out_dir/event.lc" ] ; then
 	echo -e "\tERROR: $out_dir/event.lc not made!"
 	echo -e "\tERROR: $out_dir/event.lc not made!" >> $progress_log
+# 	continue
 fi  ## End 'if $out_dir/event.lc files not made', i.e. if saextrct failed
 if [ ! -e "$out_dir/event.pha" ] ; then
 	echo -e "\tERROR: $out_dir/event.pha not made!"
 	echo -e "\tERROR: $out_dir/event.pha not made!" >> $progress_log
+# 	continue
 fi  ## End 'if $out_dir/event.lc files not made', i.e. if 
 
 echo "SEEXTRCT finished"
