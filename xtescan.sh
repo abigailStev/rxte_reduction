@@ -12,10 +12,10 @@
 ## of XTE data (using FTOOLS)
 ##
 ## Calling sequence:
-##    ./xtescan.sh <filename prefix> <obsid list> 
+##    ./xtescan.sh <obsid list> <filename prefix> 
 ##
 ## Example:
-##    > ./xtescan.sh cygx1 obsid.lst
+##    > ./xtescan.sh obsid.lst cygx1 
 ##
 ## Output are the following files:
 ##     <fileprefix>_allinfo.lst     - details of every file
