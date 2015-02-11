@@ -77,21 +77,22 @@ for line in $( cat "$propID_list" ); do
 	###############################################
 	## Download those remote directories with wget
 	################################################
+	echo "Download log: $dl_log"
 	
 	wget -r -P $data_dir -a $dl_log -nv -nH --cut-dirs=5 -i "$dl_list"
 	
 	##	-r: recursive, i.e. get that and all sub-directories
 	##	-P: let the directory specified be the parent directory for saving
-	##  -q: quiet (i.e. don't print much at all to the screen)
+	##  -nv: non-verbose (i.e. don't print much at all to the screen)
 	##	-nH: cut the web address out of the directory saving name
 	##  -a: append output to specified log file
 	##	-cut-dirs=5: literally all i want to save the name as is 'obsID' in the parent dir
 	##	-i: download the following list of directories
-	break
+# 	break
 done
 
 ###############################################################################
-## Can run xtescan on the data after it's downloaded
+## Run xtescan on the data after it's downloaded
 
 time "$home_dir/Dropbox/Research/rxte_reduce"/xtescan.sh j1808-1HzQPO "$propID_list"
 
