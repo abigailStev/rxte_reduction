@@ -28,6 +28,8 @@
 ##     17/05/2007 -- philv1.2 -- modified to use input obsid list
 ##	   02/02/2015 -- abbiev1.3 -- now in bash, flipped order of inputs
 ##     05/02/2015 -- abbiev1.4 -- does list of propIDs
+##     11/02/2015 -- abbiev1.5 -- uses xargs to trim leading whitespace from 
+##								  number variables
 ###############################################################################
 
 ## Make sure the input arguments are ok
@@ -42,7 +44,6 @@ proplist=$2  ## List of propIDs for the observation(s)
 
 home_dir=$(ls -d ~)  ## The home directory of this machine
 list_dir="$home_dir/Dropbox/Lists"
-data_dir="$home_dir/Data/RXTE/$propID"
 reduced_dir="$home_dir/Reduced_data/${prefix}"
 
 if [ ! -d "$reduced_dir" ]; then mkdir -p "$reduced_dir"; fi
@@ -64,6 +65,7 @@ for line in $( cat "$proplist" ); do
 	IFS=',' read -a array <<< "$line"
 	propID="${array[1]}"
 	obslist="$list_dir/${propID}_dl_obsIDs.txt"
+	data_dir="$home_dir/Data/RXTE/$propID"
 	
 	##########################################
 	## Loop over all PCA index files (ObsIDs)
@@ -83,7 +85,7 @@ for line in $( cat "$proplist" ); do
 			echo -e "\tERROR: No PCA science files for $obsid."
 			continue
 		else
-			echo "-- Searching $obsid, found $n files."
+			echo "-- Searching $obsid, found $n files." | xargs
 		fi
 
 		## Loop over each PCA data file within the ObsID
@@ -131,7 +133,7 @@ for line in $( cat "$proplist" ); do
 			obsdate=$( python -c "from tools import get_key_val; print get_key_val('$pcafile', 1, 'DATE-OBS')" )
 
 			## Tell the user what we have found so far
-			echo "-- $i/$n -- $obsdate $datamode $deltaT 2^$dt2"
+			echo "-- $i /$n -- $datamode $deltaT 2^$dt2" | xargs
 
 			## For this file add the filename, config, date and time to the output file 
 			echo "$pcafile $datamode $obsdate 2^$dt2" >> $allinfo_list
@@ -146,8 +148,7 @@ for line in $( cat "$proplist" ); do
 	
 		## End of loop over PCA data files within the ObsID
 		done
-	
-		break
+			
 	## End of loop over each ObsID
 	done
 ## End of loop over each proposal ID
