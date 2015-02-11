@@ -78,7 +78,7 @@ echo "prefix = ${prefix}"
 
 num_newfiles=$( wc -l < $newfilelist )
 current_file_num=1
-echo "Number of new files: $num_newfiles"
+echo "Number of new files: $num_newfiles" | xargs
 
 ###############################################################################
 ## Looping through each 'newfile' in 'newfilelist'
@@ -86,7 +86,7 @@ echo "Number of new files: $num_newfiles"
 
 for newfile in $( cat $newfilelist ); do
 	
-	echo "ObsID $current_file_num/$num_newfiles" >> $progress_log
+	echo "ObsID $current_file_num /$num_newfiles" | xargs >> $progress_log  ## xargs trims the leading whitespace from $num_newfiles
 	obs_dir=$( dirname `dirname ${newfile}` )  ## Where the observation is stored
 	echo "obs_dir = $obs_dir"
 	
@@ -201,13 +201,13 @@ for newfile in $( cat $newfilelist ); do
 	
 # 	filtex="(PCU2_ON==1)&&(PCU0_ON==1)&&(elv>10)&&(offset<0.02)&&(VpX1LCntPcu2<=150)&&(VpX1RCntPcu2<=150)"  ## For saxj1808, to get rid of TBOs
 # 	filtex="(PCU2_ON==1)&&(PCU0_ON==1)&&(elv>10)&&(offset<0.02)"  ## For black holes
-	filtex="(PCU2_ON==1)&&(elv>10)&&(offset<0.02)"  ## For GX339 QPOs; don't 
+	filtex="(PCU2_ON==1)&&(elv>10)&&(offset<0.02)&&(NUM_PCU_ON>=2)"  ## For GX339 QPOs; don't 
 													## need to worry about time
 													## since saa as it's not a 
 													## very bright source
 # 	filtex="(PCU2_ON==1)&&(PCU0_ON==1)&&(elv>10)&&(offset<0.02)&&(VpX1LCntPcu2>=100)&&(VpX1RCntPcu2>=100)"
 
-	"$script_dir"/gti_and_bkgd.sh "$out_dir" "$filtex" "$progress_log" "$evt_bkgd_list"
+# 	"$script_dir"/gti_and_bkgd.sh "$out_dir" "$filtex" "$progress_log" "$evt_bkgd_list"
 	
 	##########################################################
 	## Built-in extraction of Standard-2f and event-mode data
@@ -235,158 +235,165 @@ echo -e "Finished individual obsIDs.\n" >> $progress_log
 
 out_dir="$out_dir_prefix/${prefix}"
 
-## Sort filter files from above chronologically
-filters_ordered="$out_dir/all_filters_ordered.lst"
-python -c "from tools import time_ordered_list; time_ordered_list('$filter_list')" > $filters_ordered
-filter_file="$out_dir/all.xfl"
-gti_file="$out_dir/all.gti"
-
-## Merge the filter files into one big one
-fmerge infiles=@"$filters_ordered" \
-	outfile="$filter_file" \
-	columns=- \
-	copyprime=yes \
-	lastkey=TSTOP \
-	clobber=yes
-
-if [ ! -e "$filter_file" ] ; then
-	echo -e "\tERROR: fmerge did not work, total filter file not made. Exiting."
-	echo -e "\tERROR: fmerge did not work, total filter file not made. Exiting." >> $progress_log
-	exit
-fi
-
-##############################################################
-## Make a GTI from the merged filter file for all the obsIDs
-##############################################################
-
-bkgd_model="$list_dir/pca_bkgd_cmbrightvle_eMv20051128.mdl"  ## good for > 40 counts/sec/pcu
-# bkgd_model="$list_dir/pca_bkgd_cmfaintl7_eMv20051128.mdl"  ## good for < 40 counts/sec/pcu
-saa_history="$list_dir/pca_saa_history"
-
-bin_loc=$(python -c "from tools import get_key_val; print get_key_val('$filter_file', 0, 'TIMEPIXR')")
-if (( bin_loc == 0 )); then
-	maketime infile=$filter_file outfile=$gti_file expr=$filtex name=NAME \
-		value=VALUE time=Time compact=no clobber=yes prefr=0.0 postfr=1.0
-elif (( bin_loc == 1 )); then
-	maketime infile=$filter_file outfile=$gti_file expr=$filtex name=NAME \
-		value=VALUE time=Time compact=no clobber=yes prefr=1.0 postfr=0.0
-else
-	echo "Warning: TIMEPIXR is neither 0 nor 1. Setting prefr=postfr=0.5."
-	echo "Warning: TIMEPIXR is neither 0 nor 1. Setting prefr=postfr=0.5." >> $progress_log
-	maketime infile=$filter_file outfile=$gti_file expr=$filtex name=NAME \
-		value=VALUE time=Time compact=no clobber=yes prefr=0.5 postfr=0.5
-fi
-
-if [ ! -e "$gti_file" ] ; then
-	echo -e "\tERROR: Total GTI file not made. Exiting."
-	echo -e "\tERROR: Total GTI file not made. Exiting." >> $progress_log
-	exit
-fi
-
-###################################
-## Make a mean event-mode spectrum
-###################################
-
-echo "Extracting MEAN evt spectrum"
-echo "Extracting MEAN evt spectrum" >> $progress_log
-all_evt="$out_dir/all_evt.pha"
-if (( $(wc -l < $se_list) == 0 )); then
-	echo -e "\tERROR: No event-mode data files. Cannot run seextrct."
-	echo -e "\tERROR: No event-mode data files. Cannot run seextrct." >> $progress_log
-else
-	seextrct infile=@"$se_list" \
-		maxmiss=INDEF \
-		gtiorfile=- \
-		gtiandfile="$gti_file" \
-		outroot="${all_evt%.*}" \
-		bitfile="$list_dir"/bitfile_evt_PCU2 \
-		timecol="TIME" \
-		columns="Event" \
-		multiple=yes \
-		binsz=1 \
-		printmode=SPECTRUM \
-		lcmode=RATE \
-		spmode=SUM \
-		timemin=INDEF \
-		timemax=INDEF \
-		timeint=INDEF \
-		chmin=INDEF \
-		chmax=INDEF \
-		chint=INDEF \
-		chbin=INDEF \
-		mode=ql
-
-	if [ ! -e "$all_evt" ] ; then
-		echo -e "\tERROR: Total event-mode spectrum not made!"
-		echo -e "\tERROR: Total event-mode spectrum not made!" >> $progress_log
-	# 	exit
-	fi  ## End 'if $all_evt not made', i.e. if seextrct failed
-fi
-
-###################################
-## Make a mean standard-2 spectrum
-###################################
-
-echo "Extracting MEAN std2 pcu 2 data"
-echo "Extracting MEAN std2 pcu 2 data" >> $progress_log
-all_std2="$out_dir/all_std2.pha"
-cp "$list_dir"/std2_pcu2_cols.lst ./tmp_std2_pcu2_cols.lst
-
-if (( $(wc -l < $sa_list) == 0 )); then
-	echo -e "\tERROR: No Standard-2 data files. Cannot run saextrct."
-	echo -e "\tERROR: No Standard-2 data files. Cannot run saextrct." >> $progress_log
-else
-	saextrct lcbinarray=10000000 \
-		maxmiss=200 \
-		infile=@"$sa_list" \
-		gtiorfile=- \
-		gtiandfile="$gti_file" \
-		outroot="${all_std2%.*}" \
-		columns=@tmp_std2_pcu2_cols.lst \
-		accumulate=ONE \
-		timecol="Time" \
-		binsz=16 \
-		mfracexp=INDEF \
-		printmode=BOTH \
-		lcmode=RATE \
-		spmode=SUM \
-		mlcinten=INDEF \
-		mspinten=INDEF \
-		writesum=- \
-		writemean=- \
-		timemin=INDEF \
-		timemax=INDEF \
-		timeint=INDEF \
-		chmin=INDEF \
-		chmax=INDEF \
-		chint=INDEF \
-		chbin=INDEF \
-		dryrun=no \
-		clobber=yes
-
-	if [ -e $dump_file ] ; then rm -f $dump_file; fi
-
-	if [ ! -e "${all_std2%.*}.lc" ] ; then
-		echo -e "\tERROR: Total Standard-2 light curve not made!"
-		echo -e "\tERROR: Total Standard-2 light curve not made!" >> $progress_log
-	fi  ## End 'if lightcurve not made', i.e. if saextrct failed
-	if [ ! -e "$all_std2" ] ; then
-		echo -e "\tERROR: Total Standard-2 spectrum not made!"
-		echo -e "\tERROR: Total Standard-2 spectrum not made!" >> $progress_log
-# 		exit
-	fi  ## End 'if spectrum not made', i.e. if saextrct failed
-fi  ## End 'if there are std2 files in $sa_list'
-
-echo "Done with total extractions."
-
-## Deleting the temporary file(s)
-rm tmp_std2_pcu2_cols.lst
-
-#######################################################
-## Adding the extracted event-mode background spectra.
-#######################################################
-
-"$script_dir"/event_mode_bkgd.sh "$out_dir" "$evt_bkgd_list" "$all_evt" "$progress_log"
+# ## Sort filter files from above chronologically
+# filters_ordered="$out_dir/all_filters_ordered.lst"
+# python -c "from tools import time_ordered_list; time_ordered_list('$filter_list')" > $filters_ordered
+# filter_file="$out_dir/all.xfl"
+# gti_file="$out_dir/all.gti"
+# 
+# ## Merge the filter files into one big one
+# fmerge infiles=@"$filters_ordered" \
+# 	outfile="$filter_file" \
+# 	columns=- \
+# 	copyprime=yes \
+# 	lastkey=TSTOP \
+# 	clobber=yes
+# 
+# if [ ! -e "$filter_file" ] ; then
+# 	echo -e "\tERROR: fmerge did not work, total filter file not made. Exiting."
+# 	echo -e "\tERROR: fmerge did not work, total filter file not made. Exiting." >> $progress_log
+# 	exit
+# fi
+# 
+# ##############################################################
+# ## Make a GTI from the merged filter file for all the obsIDs
+# ##############################################################
+# 
+# bkgd_model="$list_dir/pca_bkgd_cmbrightvle_eMv20051128.mdl"  ## good for > 40 counts/sec/pcu
+# # bkgd_model="$list_dir/pca_bkgd_cmfaintl7_eMv20051128.mdl"  ## good for < 40 counts/sec/pcu
+# saa_history="$list_dir/pca_saa_history"
+# 
+# bin_loc=$(python -c "from tools import get_key_val; print get_key_val('$filter_file', 0, 'TIMEPIXR')")
+# if (( bin_loc == 0 )); then
+# 	maketime infile=$filter_file outfile=$gti_file expr=$filtex name=NAME \
+# 		value=VALUE time=Time compact=no clobber=yes prefr=0.0 postfr=1.0
+# elif (( bin_loc == 1 )); then
+# 	maketime infile=$filter_file outfile=$gti_file expr=$filtex name=NAME \
+# 		value=VALUE time=Time compact=no clobber=yes prefr=1.0 postfr=0.0
+# else
+# 	echo "Warning: TIMEPIXR is neither 0 nor 1. Setting prefr=postfr=0.5."
+# 	echo "Warning: TIMEPIXR is neither 0 nor 1. Setting prefr=postfr=0.5." >> $progress_log
+# 	maketime infile=$filter_file outfile=$gti_file expr=$filtex name=NAME \
+# 		value=VALUE time=Time compact=no clobber=yes prefr=0.5 postfr=0.5
+# fi
+# 
+# if [ ! -e "$gti_file" ] ; then
+# 	echo -e "\tERROR: Total GTI file not made. Exiting."
+# 	echo -e "\tERROR: Total GTI file not made. Exiting." >> $progress_log
+# 	exit
+# fi
+# 
+# ###################################
+# ## Make a mean event-mode spectrum
+# ###################################
+# 
+# echo "Extracting MEAN evt spectrum"
+# echo "Extracting MEAN evt spectrum" >> $progress_log
+# all_evt="$out_dir/all_evt.pha"
+# if (( $(wc -l < $se_list) == 0 )); then
+# 	echo -e "\tERROR: No event-mode data files. Cannot run seextrct."
+# 	echo -e "\tERROR: No event-mode data files. Cannot run seextrct." >> $progress_log
+# else
+# 	seextrct infile=@"$se_list" \
+# 		maxmiss=INDEF \
+# 		gtiorfile=- \
+# 		gtiandfile="$gti_file" \
+# 		outroot="${all_evt%.*}" \
+# 		bitfile="$list_dir"/bitfile_evt_PCU2 \
+# 		timecol="TIME" \
+# 		columns="Event" \
+# 		multiple=yes \
+# 		binsz=1 \
+# 		printmode=SPECTRUM \
+# 		lcmode=RATE \
+# 		spmode=SUM \
+# 		timemin=INDEF \
+# 		timemax=INDEF \
+# 		timeint=INDEF \
+# 		chmin=INDEF \
+# 		chmax=INDEF \
+# 		chint=INDEF \
+# 		chbin=INDEF \
+# 		mode=ql
+# 
+# 	if [ ! -e "$all_evt" ] ; then
+# 		echo -e "\tERROR: Total event-mode spectrum not made!"
+# 		echo -e "\tERROR: Total event-mode spectrum not made!" >> $progress_log
+# 	# 	exit
+# 	fi  ## End 'if $all_evt not made', i.e. if seextrct failed
+# fi
+# 
+# ###################################
+# ## Make a mean standard-2 spectrum
+# ###################################
+# 
+# echo "Extracting MEAN std2 pcu 2 data"
+# echo "Extracting MEAN std2 pcu 2 data" >> $progress_log
+# all_std2="$out_dir/all_std2.pha"
+# cp "$list_dir"/std2_pcu2_cols.lst ./tmp_std2_pcu2_cols.lst
+# 
+# if (( $(wc -l < $sa_list) == 0 )); then
+# 	echo -e "\tERROR: No Standard-2 data files. Cannot run saextrct."
+# 	echo -e "\tERROR: No Standard-2 data files. Cannot run saextrct." >> $progress_log
+# else
+# 	saextrct lcbinarray=10000000 \
+# 		maxmiss=200 \
+# 		infile=@"$sa_list" \
+# 		gtiorfile=- \
+# 		gtiandfile="$gti_file" \
+# 		outroot="${all_std2%.*}" \
+# 		columns=@tmp_std2_pcu2_cols.lst \
+# 		accumulate=ONE \
+# 		timecol="Time" \
+# 		binsz=16 \
+# 		mfracexp=INDEF \
+# 		printmode=BOTH \
+# 		lcmode=RATE \
+# 		spmode=SUM \
+# 		mlcinten=INDEF \
+# 		mspinten=INDEF \
+# 		writesum=- \
+# 		writemean=- \
+# 		timemin=INDEF \
+# 		timemax=INDEF \
+# 		timeint=INDEF \
+# 		chmin=INDEF \
+# 		chmax=INDEF \
+# 		chint=INDEF \
+# 		chbin=INDEF \
+# 		dryrun=no \
+# 		clobber=yes
+# 
+# 	if [ -e $dump_file ] ; then rm -f $dump_file; fi
+# 
+# 	if [ ! -e "${all_std2%.*}.lc" ] ; then
+# 		echo -e "\tERROR: Total Standard-2 light curve not made!"
+# 		echo -e "\tERROR: Total Standard-2 light curve not made!" >> $progress_log
+# 	fi  ## End 'if lightcurve not made', i.e. if saextrct failed
+# 	if [ ! -e "$all_std2" ] ; then
+# 		echo -e "\tERROR: Total Standard-2 spectrum not made!"
+# 		echo -e "\tERROR: Total Standard-2 spectrum not made!" >> $progress_log
+# # 		exit
+# 	fi  ## End 'if spectrum not made', i.e. if saextrct failed
+# fi  ## End 'if there are std2 files in $sa_list'
+# 
+# echo "Done with total extractions."
+# 
+# ## Deleting the temporary file(s)
+# rm tmp_std2_pcu2_cols.lst
+# 
+# #######################################################
+# ## Adding the extracted event-mode background spectra.
+# #######################################################
+# 
+# "$script_dir"/event_mode_bkgd.sh "$out_dir" "$evt_bkgd_list" "$all_evt" "$progress_log"
+# 
+# ######################################################
+# ## Analyzing filter files to see how many PCUs are on
+# ######################################################
+# 
+# # "$script_dir"/analyze_filters.sh "$list_dir/${prefix}_propIDs.lst" "$prefix"
+# "$script_dir"/analyze_filters.sh "$obsID_list" "$prefix" >> $progress_log
 
 ###############################################################################
 ## 					All done!
