@@ -14,7 +14,7 @@
 
 ## Make sure the input arguments are ok
 if (( $# != 4 )); then
-    echo -e "\t\tUsage: ./gti_and_bkgd.sh <output dir> <filter expression> <progress log> <evt bkgd list>"
+    echo -e "\t\tUsage: ./gti_and_bkgd.sh <output dir> <filter expression> <progress log> <evt bkgd list>\n"
     exit
 fi
 
@@ -84,9 +84,9 @@ for std2_pca_file in $(ls $out_dir/"std2"*.pca); do
 	std2_bkgd=${std2_pca_file%.*}"_std2.bkgd"
 	echo "std2 bkgd file = $std2_bkgd"
 	
-	if [ -e "$std2_pca_file" ] && [ -e "bkgd_model" ] && \
+	if [ -e "$std2_pca_file" ] && [ -e "$bkgd_model" ] && \
 		[ -e "$filter_file" ] && [ -e "$saa_history" ]; then
-		
+
 		pcabackest infile=$std2_pca_file \
 			outfile=$std2_bkgd \
 			modelfile=$bkgd_model \
@@ -148,7 +148,7 @@ for std2_pca_file in $(ls $out_dir/"std2"*.pca); do
 	event_bkgd="${std2_pca_file%.*}_evt.bkgd"
 	echo "event bkgd file = $event_bkgd"
 
-	if [ -e "$std2_pca_file" ] && [ -e "bkgd_model" ] && \
+	if [ -e "$std2_pca_file" ] && [ -e "$bkgd_model" ] && \
 		[ -e "$filter_file" ] && [ -e "$saa_history" ]; then
 		
 		pcabackest infile=$std2_pca_file \
