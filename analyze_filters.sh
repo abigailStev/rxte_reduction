@@ -8,13 +8,15 @@
 ###############################################################################
 
 ## Make sure the input arguments are ok
-if (( $# != 2 )); then
-    echo -e "\t\tUsage: ./analyze_filters.sh <obs ID list> <filename prefix>"
-    exit
-fi
-obslist=$1
-prefix=$2
+# if (( $# != 2 )); then
+#     echo -e "\t\tUsage: ./analyze_filters.sh <obs ID list> <filename prefix>"
+#     exit
+# fi
+# obslist=$1
+# prefix=$2
 
+obslist="/Users/abigailstevens/Dropbox/Lists/GX339-BQPO_obsIDs.lst" 
+prefix="GX339-BQPO"
 
 ###############################################################################
 
@@ -23,12 +25,14 @@ if (( $(echo $DYLD_LIBRARY_PATH | grep heasoft | wc -l) < 1 )); then
 	. $HEADAS/headas-init.sh
 fi
 
-
 home_dir=$(ls -d ~)  ## The home directory of this machine
 list_dir="$home_dir/Dropbox/Lists"
 red_dir="$home_dir/Reduced_data/${prefix}"
+script_dir="$home_dir/Dropbox/Research/rxte_reduce"
 filter_tab="$red_dir/filters.dat"
 if [ -e "$filter_tab" ]; then rm "$filter_tab"; fi; touch "$filter_tab"
+filter_list="${red_dir}/tmp_filters.txt"
+if [ -e "$filter_list" ]; then rm "$filter_list"; fi; touch "$filter_list"
 
 ###############################################################################
 
@@ -65,17 +69,15 @@ if [ -e "$filter_tab" ]; then rm "$filter_tab"; fi; touch "$filter_tab"
 			echo -e "\tERROR: Filter file for $obsid does not exist."
 			continue
 		fi
-		## For plotting the filter file:
-# 		filter_plot="$red_dir/$obsid"_filter.eps
-# 		if [ -e "$filter_plot" ]; then rm "$filter_plot"; fi
-# 		fplot "$filter_file"[1] TIME "num_pcu_on pcu0_on pcu1_on pcu2_on pcu3_on pcu4_on offset elv" - /xw "hardcopy ${filter_plot}/cps"
-# 		echo "$filter_plot"
 		
-		python -c "from tools import pcu_info; pcu_info('$filter_file', '$filter_tab')"
-				
+		echo "$filter_file" >> $filter_list
+		
 	done
 	
 # done
+
+python "$script_dir"/pcu_filter.py
+		
 
 # open "$filter_tab"
 
