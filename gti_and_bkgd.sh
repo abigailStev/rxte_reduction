@@ -1,6 +1,6 @@
 #! /bin/bash
 
-###############################################################################
+################################################################################
 ## 
 ## Make GTI file, background file, and extract background spectrum per obsID.
 ##
@@ -9,8 +9,7 @@
 ## 
 ## Abigail Stevens, A.L.Stevens@uva.nl, 2014-2015 
 ## 
-###############################################################################
-
+################################################################################
 
 ## Make sure the input arguments are ok
 if (( $# != 4 )); then
@@ -23,6 +22,8 @@ filtex=$2
 progress_log=$3
 evt_bkgd_list=$4
 
+################################################################################
+
 ## If heainit isn't running, start it
 if (( $(echo $DYLD_LIBRARY_PATH | grep heasoft | wc -l) < 1 )); then
 	. $HEADAS/headas-init.sh
@@ -33,6 +34,9 @@ gti_file="$out_dir/gti_file.gti"
 home_dir=$(ls -d ~) 
 list_dir="$home_dir/Dropbox/Lists"
 script_dir="$home_dir/Dropbox/Research/rxte_reduce"
+
+################################################################################
+################################################################################
 
 #######################################
 ## Making the GTI from the filter file
@@ -67,18 +71,23 @@ if [ ! -e "$gti_file" ]; then
 	continue
 fi
 
-##############################################################################
+################################################################################
 ## Looping through the Standard-2 files to make a background and extract a 
 ## background spectrum for each of them. Two different backgrounds are made 
 ## because Standard-2 and event-mode backgrounds require different flags.
-##############################################################################
+################################################################################
 
 cp "$list_dir"/std2_pcu2_cols.lst ./tmp_std2_pcu2_cols.lst
 
 for std2_pca_file in $(ls $out_dir/"std2"*.pca); do
 	
+	############################################################################
+	## Standard-2 background
+	##
 	## These bkgd files don't have gain correction applied. Use them with
 	## Standard-2 or Standard-1b data.
+	############################################################################
+	
 	echo "Making Standard-2 background."
 	echo "Making Standard-2 background." >> $progress_log
 	std2_bkgd=${std2_pca_file%.*}"_std2.bkgd"
@@ -101,7 +110,10 @@ for std2_pca_file in $(ls $out_dir/"std2"*.pca); do
 	
 	if [ -e "$std2_bkgd" ]; then
 		
+		##########################################################
 		## Extract a spectrum from the Standard-2 background file
+		##########################################################
+		
 		saextrct lcbinarray=10000000 \
 			maxmiss=200 \
 			infile=$std2_bkgd \
@@ -138,11 +150,16 @@ for std2_pca_file in $(ls $out_dir/"std2"*.pca); do
 		echo -e "\tERROR: Standard-2 background file not made."
 		echo -e "\tERROR: Standard-2 background file not made." >> $progress_log
 	fi
-		
-		
+	
+	############################################################################
+	## Event-mode background
+	##
 	## These bkgd files are made with the gain correction and full 256 channels,
 	## they should be used when data is not good xenon or standard 1 or 2
-	## Use this for event-mode data! need to re-bin once i've extracted a spectrum
+	## Use this for event-mode data! Need to re-bin in energy channels once I've
+	## extracted a spectrum and summed all the spectra of the obsIDs being used.
+	############################################################################
+
 	echo "Making event-mode background."
 	echo "Making event-mode background." >> $progress_log
 	event_bkgd="${std2_pca_file%.*}_evt.bkgd"
@@ -166,8 +183,11 @@ for std2_pca_file in $(ls $out_dir/"std2"*.pca); do
 	
 	if [ -e "$event_bkgd" ]; then
 		echo "$event_bkgd"
-
+		
+		##########################################################
 		## Extract a spectrum from the event-mode background file
+		##########################################################
+		
 		saextrct lcbinarray=10000000 \
 			maxmiss=200 \
 			infile=$event_bkgd \
@@ -225,7 +245,7 @@ for std2_pca_file in $(ls $out_dir/"std2"*.pca); do
 
 done
 
-###############################################################################
+################################################################################
 ## All done!
 
 ## Deleting the temp file(s)
@@ -234,4 +254,4 @@ rm tmp_std2_pcu2_cols.lst
 echo "Finished making GTI and background."
 echo "Finished making GTI and background." >> $progress_log
 
-###############################################################################
+################################################################################
