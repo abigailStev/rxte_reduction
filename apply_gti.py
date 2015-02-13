@@ -10,10 +10,8 @@ __author_email__ = "A.L.Stevens@uva.nl"
 __year__ = "2014"
 __description__ = "Applies a GTI to an RXTE decoded event list, to filter out \
 events in bad times. This code assumes that the GTI times have not been \
-previously corrected with TIMEZERO, but does assume that PREFR=0 and POSTFR=1, \
-so that the start time is at the front of a 16-second time bin and the end time\
- is at the end of a 16-second time bin. Assumes that the GTI is made from \
-Standard 2 data, with 16-second time bins."
+previously corrected with TIMEZERO, but does assume the start time is at the \
+front of a time bin and the end time is at the end of a time bin."
 
 """
 		apply_gti.py
@@ -113,10 +111,10 @@ def main(event_list, gti_file, out_file):
 	print "GTI file:", gti_file
 
 	timezero = float(get_key_val(event_list, 0, 'TIMEZERO'))
-	assert int(get_key_val(gti_file, 1, 'PREFR')) == 0, \
-		"\tERROR: Current configuration of program requires PREFR=0"
-	assert int(get_key_val(gti_file, 1, 'POSTFR')) == 1, \
-		"\tERROR: Current configuration of program requires POSTFR=1"
+# 	assert int(get_key_val(gti_file, 1, 'PREFR')) == 0, \
+# 		"\tERROR: Current configuration of program requires PREFR = 0"
+# 	assert int(get_key_val(gti_file, 1, 'POSTFR')) == 1, \
+# 		"\tERROR: Current configuration of program requires POSTFR = 1"
 	
 	data_hdu = fits.open(event_list)
 	data_header = data_hdu[1].header	
@@ -218,15 +216,14 @@ if __name__ == "__main__":
 	
 	parser = argparse.ArgumentParser(usage='applygti.py eventlist gtifile \
 outfile', description='Applies a GTI (good time interval) to an RXTE decoded \
-event list. Corrects for TIMEZERO. Assumes 16-second GTI time binning. Does not\
- select PCU.')
+event list. Corrects for TIMEZERO. Does not select PCU.')
 	
 	parser.add_argument('eventlist', help="The full path of the decoded event \
 list file.")
 	
 	parser.add_argument('gtifile', help="The full path of the (FITS) GTI file, \
 made in HEASoft's 'maketime' script. This program assumes that a FITS-format \
-GTI file will have the extension '.gti' and has 16-second binning.")
+GTI file will have the extension '.gti'.")
 	
 	parser.add_argument('outfile', help="Name of the .fits output file, to \
 write the GTI'd event list to.")
