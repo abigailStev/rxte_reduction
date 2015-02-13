@@ -10,7 +10,7 @@
 
 ## Make sure the input arguments are ok
 if (( $# != 3 )); then
-    echo -e "\t\tUsage: ./good_events.sh <prefix> <obs ID list> <GTI'd event list to write to>"
+    echo -e "\t\tUsage: ./good_events.sh <prefix> <obs ID list> <GTI'd event list to write to>\n"
     exit
 fi
 
@@ -25,7 +25,7 @@ fi
 
 home_dir=$(ls -d ~)
 exe_dir="$home_dir/Dropbox/Research/rxte_reduce"
-red_dir="$home_dir/Reduced_data/$prefix/
+red_dir="$home_dir/Reduced_data/$prefix/"
 
 if [ -e "$gtideventlist_list" ]; then rm "$gtideventlist_list"; fi; touch "$gtideventlist_list"
 
