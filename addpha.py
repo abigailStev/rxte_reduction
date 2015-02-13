@@ -12,18 +12,28 @@ to add exposure times as well!!
 
 """
 
-if __name__ == "__main__":
+###############################################################################
 
+if __name__ == "__main__":
+	
+	###############################
+	## Getting the input arguments
+	###############################
+	
     parser = argparse.ArgumentParser(usage='addpha.py file_list outfile', \
-description='', epilog='')
+description='Adds pha spectra, in theory as many as needed.', epilog='')
     	
     parser.add_argument('file_list', help="The full path of the (ASCII/txt/\
 dat) input file listing the spectra to be summed. One file per line.")
         
-    parser.add_argument('out_file', help="The full path of the (FITS) \
+    parser.add_argument('out_file', help="The full path of the (.pha) \
 output file to write the summed spectra and exposure time to.")
         
     args = parser.parse_args()
+    
+    ##########################
+    ## Initializing variables
+    ##########################
     
     infiles = [line.strip() for line in open(args.file_list)]
     
@@ -31,8 +41,10 @@ output file to write the summed spectra and exposure time to.")
     spectrum = np.zeros(256)
     sq_error = np.zeros(256)
     channels = np.arange(256)
-#     print channels
     
+    ###########################################################################
+    ## Looping through the spectra to sum the exposure time, counts, and error
+    ###########################################################################
     for fits_file in infiles:
 		file_hdu = fits.open(fits_file)		
 		exposure += float(file_hdu[1].header['EXPOSURE'])
@@ -40,7 +52,11 @@ output file to write the summed spectra and exposure time to.")
 		sq_error += np.square(file_hdu[1].data.field('STAT_ERR'))
 		file_hdu.close()
 		
-    error = np.sqrt(sq_error)
+    error = np.sqrt(sq_error) ## because adding in quadrature
+    
+    #########################################
+    ## Making FITS output (header and table)
+    #########################################
     
     prihdr = fits.Header()
     prihdr.set('TYPE', "Summed energy spectra.")
@@ -64,4 +80,7 @@ output file to write the summed spectra and exposure time to.")
     ## Writing to a FITS file
     thdulist = fits.HDUList([prihdu, tbhdu])
     thdulist.writeto(args.out_file)	
-    
+
+## End of program 'addpha.py'
+
+###############################################################################
