@@ -1,8 +1,11 @@
+#!//anaconda/bin/python
 import argparse
 from astropy.io import fits
 import numpy as np
 from datetime import datetime
 import os
+import subprocess
+import tools
 
 __author__ = "Abigail Stevens"
 __author_email__ = "A.L.Stevens@uva.nl"
@@ -15,7 +18,7 @@ and counts. Error is summed in quadrature."
 
 Written in Python 2.7.
 
-Example: python addpha.py tmp_phas.txt tmp_out.pha
+Example: python addpha.py tmp_phas.txt ./tmp_out.pha tmp_all.gti
 
 """
 
@@ -35,7 +38,10 @@ dat) input file listing the spectra to be summed. One file per line.")
         
     parser.add_argument('out_file', help="The full path of the (.pha) \
 output file to write the summed spectra and exposure time to.")
-        
+    
+    parser.add_argument('gti_file', help="The GTI file for all files being \
+added.")
+
     args = parser.parse_args()
     
     ##########################
@@ -44,6 +50,7 @@ output file to write the summed spectra and exposure time to.")
     
     infiles = [line.strip() for line in open(args.file_list)]
     
+    subprocess.call(["cp", infiles[0], args.out_file])
     exposure = 0.0
     spectrum = np.zeros(256)
     sq_error = np.zeros(256)
@@ -64,34 +71,57 @@ output file to write the summed spectra and exposure time to.")
 	
     error = np.sqrt(sq_error)  ## because adding in quadrature
     
-    #########################################
+
+    ## Getting header keyword values from the last file
+    lastfile = fits.open(infiles[-1])
+    tstop = lastfile[0].header['TSTOP']
+    dateend = lastfile[0].header['DATE-END']
+    timeend = lastfile[0].header['TIME-END']
+    tstopi = lastfile[2].header['TSTOPI']
+    tstopf = lastfile[2].header['TSTOPF']
+    lastfile.close()
+	
+	## Getting the GTI data from the gti file (to save to ext 2 of the output)
+    gti_hdu = fits.open(args.gti_file)
+    all_gti_data = gti_hdu[1].data
+    gti_hdu.close()
+	
+	#########################################
     ## Making FITS output (header and table)
     #########################################
     
-    ## Making FITS header (extension 0)
-    prihdr = fits.Header()
-    prihdr.set('TYPE', "Summed energy spectra.")
-    prihdr.set('DATE', str(datetime.now()), "YYYY-MM-DD localtime")
-    prihdr.set('FILELIST', args.file_list)
-    prihdr.set('EXPOSURE', exposure, "seconds")
-    prihdu = fits.PrimaryHDU(header=prihdr)
+    out_hdu = fits.open(args.out_file, mode='update')
+	
+	## Saving extension 1 table data
+    tbdata = out_hdu[1].data
+    tbdata['COUNTS'] = spectrum
+    tbdata['STAT_ERR'] = error
     
-    ## Making FITS table (extension 1)
-    col1 = fits.Column(name='CHANNEL', format='I', array=channels)
-    col2 = fits.Column(name='COUNTS', unit='count', format='D', \
-    	array=spectrum)
-    col3 = fits.Column(name='STAT_ERR', unit='count', format='D', \
-    	array=error)
-    cols = fits.ColDefs([col1, col2, col3])
-    tbhdu = fits.BinTableHDU.from_columns(cols)
-    
-    ## If the file already exists, remove it
-    if os.path.isfile(args.out_file):
-    	os.remove(args.out_file)
-    
-    ## Writing to a FITS file
-    thdulist = fits.HDUList([prihdu, tbhdu])
-    thdulist.writeto(args.out_file)	
+    ## Saving extension 2 table data
+    gtidata = out_hdu[2].data
+    gtidata = all_gti_data
+	
+	## Updating header values for all three extensions
+    hdr0 = out_hdu[0].header
+    hdr0.set('TSTOP', tstop)
+    hdr0.set('DATE-END', dateend)
+    hdr0.set('TIME-END', timeend)
+    hdr1 = out_hdu[1].header
+    hdr1.set('TSTOP', tstop)
+    hdr1.set('DATE-END', dateend)
+    hdr1.set('TIME-END', timeend)
+    hdr1.set('EXPOSURE', exposure)
+    hdr1.set('FILEN1', args.file_list)
+    hdr2 = out_hdu[2].header
+    hdr2.set('TSTOPI', tstopi)
+    hdr2.set('TSTOPF', tstopf)
+    hdr2.set('DATE-END', dateend)
+    hdr2.set('TIME-END', timeend)
+    hdr2.set('ONTIME', exposure)
+	
+	## Saving the changes
+    out_hdu.flush()
+    out_hdu.close()
 
 ## End of program 'addpha.py'
 
