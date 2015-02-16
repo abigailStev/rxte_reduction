@@ -8,14 +8,14 @@ import sys
 """
 		pcu_filter.py
 """
-
-filter_list = "/Users/abigailstevens/Reduced_data/GX339-BQPO/tmp_filters.txt"
-tab_file = "/Users/abigailstevens/Reduced_data/GX339-BQPO/filters.dat"
-out_file = "/Users/abigailstevens/Reduced_data/GX339-BQPO/pcus_on.png"
+data_dir="/Users/abigailstevens/Dropbox/Research/sample_data"
+filter_list = data_dir+"/tmp_filters.txt"
+tab_file = data_dir+"/filters.dat"
+out_file = data_dir+"/pcus_on.png"
 filter_files = [line.strip() for line in open(filter_list)]
 
 num = len(filter_files)
-print num
+# print num
 
 font_prop = font_manager.FontProperties(size=16)
 # fig, ax = plt.subplots(4, 3)
@@ -32,6 +32,8 @@ for filter_file in filter_files:
 	
 	## Need to start at 1 instead of 0, since place 0 has val=255 (the null val)
 	time = data.field('TIME')[1:]
+	time = time - time[0]
+# 	print time
 	elv = data.field('ELV')[1:]
 	tssaa = data.field('TIME_SINCE_SAA')[1:]
 	offset = data.field('OFFSET')[1:]
@@ -43,7 +45,7 @@ for filter_file in filter_files:
 	pcu3 = data.field('PCU3_ON')[1:]
 	pcu4 = data.field('PCU4_ON')[1:]
 	
-	avg_time = np.mean(time)
+# 	avg_time = np.mean(time)
 	num_pcu_on = np.max(num_pcu)
 	avg_pcu_on = np.mean(num_pcu)
 	pcu0_on = np.max(pcu0)
@@ -63,6 +65,7 @@ for filter_file in filter_files:
 	ax = plt.subplot(3, 4, i)
 	ax.plot(time, num_pcu, '--')
 	ax.set_ylim(0, np.max(num_pcu)+0.25)
+	ax.set_xlabel("Elapsed time (seconds)")
 	ax.set_title(obsID)
 	
 	pcus_on = ""
@@ -77,7 +80,7 @@ for filter_file in filter_files:
 	if pcu4_on > 0:
 		pcus_on+="4"
 
-	out_str = obsID+"\t"+str(avg_time)+"\t"+str(num_pcu_on)+"\t"+\
+	out_str = obsID+"\t"+str(num_pcu_on)+"\t"+\
 		str(avg_pcu_on)+"\t"+pcus_on+"\t"+str(pcu0_on)+"\t"+str(pcu0_avg)+"\t"+\
 		str(pcu1_on)+"\t"+str(pcu1_avg)+"\t"+str(pcu2_on)+"\t"+str(pcu2_avg)+\
 		"\t"+str(pcu3_on)+"\t"+str(pcu3_avg)+"\t"+str(pcu4_on)+"\t"+\
@@ -95,12 +98,11 @@ for filter_file in filter_files:
 		col = 1
 	
 plt.tight_layout()
-plt.show()
+# plt.show()
 
 #################################################
 
 obsIDs = []
-time = np.asarray([])
 num_pcus_on = np.asarray([])
 avg_pcus_on = np.asarray([])
 pcus_on = []
@@ -121,20 +123,19 @@ for line in f:
 	line = line.strip().split()
 # 	print line
 	obsIDs.append(str(line[0]))
-	time = np.append(time, float(line[1]))
-	num_pcus_on = np.append(num_pcus_on, int(line[2]))
-	avg_pcus_on = np.append(avg_pcus_on, float(line[3]))
-	pcus_on.append(str(line[4]))
-	pcu0_on = np.append(pcu0_on, int(line[5]))
-	pcu0_avg = np.append(pcu0_avg, float(line[6]))
-	pcu1_on = np.append(pcu1_on, int(line[7]))
-	pcu1_avg = np.append(pcu1_avg, float(line[8]))
-	pcu2_on = np.append(pcu2_on, int(line[9]))
-	pcu2_avg = np.append(pcu2_avg, float(line[10]))
-	pcu3_on = np.append(pcu3_on, int(line[11]))
-	pcu3_avg = np.append(pcu3_avg, float(line[12]))
-	pcu4_on = np.append(pcu4_on, int(line[13]))
-	pcu4_avg = np.append(pcu4_avg, float(line[14]))
+	num_pcus_on = np.append(num_pcus_on, int(line[1]))
+	avg_pcus_on = np.append(avg_pcus_on, float(line[2]))
+	pcus_on.append(str(line[3]))
+	pcu0_on = np.append(pcu0_on, int(line[4]))
+	pcu0_avg = np.append(pcu0_avg, float(line[5]))
+	pcu1_on = np.append(pcu1_on, int(line[6]))
+	pcu1_avg = np.append(pcu1_avg, float(line[7]))
+	pcu2_on = np.append(pcu2_on, int(line[8]))
+	pcu2_avg = np.append(pcu2_avg, float(line[9]))
+	pcu3_on = np.append(pcu3_on, int(line[10]))
+	pcu3_avg = np.append(pcu3_avg, float(line[11]))
+	pcu4_on = np.append(pcu4_on, int(line[12]))
+	pcu4_avg = np.append(pcu4_avg, float(line[13]))
 
 x = np.arange(num)+0.5
 pcus = np.column_stack((pcu0_on, pcu1_on, pcu2_on, pcu3_on, pcu4_on))
@@ -163,6 +164,5 @@ plt.tight_layout()
 plt.savefig(out_file, dpi=150)
 # plt.show()
 	
-
 plt.close()
 
