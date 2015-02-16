@@ -21,88 +21,89 @@ Anaconda package. See https://store.continuum.io/cshop/anaconda/
 
 """
 
-##############################
-def main(propID, obsID_list_file, plot_file):
-	pass
+################################################################################
+def main(prefix, obsID_list_file, plot_file):
 	
 	file_path = os.path.dirname(obsID_list_file).strip().split('/')
-	file_prefix = "/".join(file_path[0:len(file_path)-1])+"/Reduced_data/"+propID
-	obsID_list = [line.strip() for line in open(obsID_list_file)]
-	start_time = np.float64(tools.get_key_val(file_prefix+"/"+obsID_list[0]+"/std2.lc", 0, "TSTART"))
-	print "%.21f" % start_time
+	file_prefix = "/".join(file_path[0:len(file_path)-2])+"/Reduced_data/"+prefix
 	
-	end_time = 0
-	fig, ax = plt.subplots()
+	obsID_list = [line.strip() for line in open(obsID_list_file)]
+	
 	time_avg = []
 	counts_avg = []
+
+	###################################
+	## Start of looping through obsIDs
+	###################################
 	
 	for obsID in obsID_list:
+	
 		file = file_prefix+"/"+obsID+"/std2.lc"
 		len_fname = len(file)
 		time = []
 		rate = []
+		
 		if file[len_fname - 3:len_fname].lower() == ".lc":
 			fits_hdu = fits.open(file)
 			header = fits_hdu[1].header	
 			data = fits_hdu[1].data
 			fits_hdu.close()
-			time = (data.field(0) - start_time) / float(86400) # converting to days
-	# 			time = data.field(0) - start_time
+			time = data.field(0)
 			counts = data.field(1)
-	# 			ax.plot(time, counts, lw=3, label=obsID)
 			time_avg.append(np.mean(time))
 			counts_avg.append(np.mean(counts))
-			if time[len(time)-1] > end_time:
-				end_time = time[len(time)-1]
+
 		else:
-# 			print "\n\t ERROR: ASCII doesn't work with this iteration of plot_std2_lightcurve.py, since we don't know how far apart the end of one light curve is from the beginning of the next. See evernote for previous version of program. Exiting."
-			print "\n\t ERROR: Data file needs to be in FITS format with extension '.lc'. Exiting."
+			raise Exception("\tERROR: Light curve needs to be in FITS format with extension '.lc'. Exiting.")
 			exit()
 
 		if np.amax(counts) == 63:
 			print "\n\t WARNING: Are you sure you're not plotting time vs energy channel?"
+			
 	## End of for-loop
 	
 	## Sorting the averaged lists, since obsIDs aren't necessarily in time order
 	counts_avg_sorted = [y for (x,y) in sorted(zip(time_avg, counts_avg))]
 	time_avg_sorted = sorted(time_avg)
+	## Putting time into days
+	time_avg_sorted = (time_avg_sorted - time_avg_sorted[0]) / 86400.0
+	## 432000 elapsed seconds is 5 days
+	## 86400 seconds is one day
+	
+	print "Standard-2 lightcurve: %s" % plot_file
+	fig, ax = plt.subplots()
 	ax.plot(time_avg_sorted, counts_avg_sorted, lw=3)
-	
-	plt.xlabel('Time elapsed since start of first observation', fontsize=12)
-	plt.ylabel('Average photon count', fontsize=12)
-	plt.xlim(0, )
-	title = propID+" light curve"
-	plt.title(title)
-	
-	# 432000 elapsed seconds is 5 days
-	# 86400 seconds is one day
-	
-	## The following legend code was found on stack overflow I think, or a pyplot tutorial
-# 	legend = ax.legend(loc='upper right')
-# 	for label in legend.get_texts():
-# 		 label.set_fontsize(6)
-# 	for label in legend.get_lines():
-# 		 label.set_linewidth(2)  # the legend line width
-	
+	ax.set_xlabel('Time elapsed (days)', fontsize=12)
+	ax.set_ylabel('Average photon count', fontsize=12)
+	ax.set_xlim(0, np.max(time_avg_sorted)+2)
+	ax.set_ylim(np.min(counts_avg_sorted)-10, np.max(counts_avg_sorted)+10)
+	ax.set_title(prefix+" Light Curve")	
 	plt.savefig(plot_file, dpi=140)
-	print "Plot saved to %s" % plot_file
 # 	plt.show()
 	plt.close()
 	
 ## End of function 'main'
 
 
-##########################
+################################################################################
 if __name__ == "__main__":
 	
-	parser = argparse.ArgumentParser(description="Plots the time-domain light curve.")
-	parser.add_argument('propID', help="Proposal ID.")
-	parser.add_argument('obsID_list_file', \
-		help="Name of input text file with list of obsIDs for data to plot lightcurve of. One obsID per line.")
-	parser.add_argument('plot_file', \
-		help="The output file name for the lightcurve plot.")
+	parser = argparse.ArgumentParser(usage="plot_std2_lightcurve.py prefix \
+obsID_list_file plot_file", description="Plots the time-domain light curve of a\
+ whole data set.")
+
+	parser.add_argument('prefix', help="Data set prefix / proposal ID.")
+	
+	parser.add_argument('obsID_list_file', help="Name of input text file with \
+list of obsIDs for data to plot lightcurve of. One obsID per line.")
+
+	parser.add_argument('plot_file', help="The output file name for the \
+lightcurve plot.")
+
 	args = parser.parse_args()
 
-	main(args.propID, args.obsID_list_file, args.plot_file)
+	main(args.prefix, args.obsID_list_file, args.plot_file)
 
 ## End of program 'plot_lightcurve.py'
+
+################################################################################
