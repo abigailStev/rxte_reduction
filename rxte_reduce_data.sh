@@ -220,18 +220,18 @@ for newfile in $( cat $newfilelist ); do
 													## need to worry about time
 													## since saa as it's not a 
 													## very bright source
-	filtex="(PCU2_ON==1)&&(elv>10)&&(offset<0.02)&&(NUM_PCU_ON>=2)&&(VpX1LCntPcu2<=150)&&(VpX1RCntPcu2<=150)&&(TIME_SINCE_SAA>30)"  ## For j1808-1HzQPO
+# 	filtex="(PCU2_ON==1)&&(elv>10)&&(offset<0.02)&&(NUM_PCU_ON>=2)&&(VpX1LCntPcu2<=150)&&(VpX1RCntPcu2<=150)&&(TIME_SINCE_SAA>30)"  ## For j1808-1HzQPO
 # 	filtex="(PCU2_ON==1)&&(PCU0_ON==1)&&(elv>10)&&(offset<0.02)&&(VpX1LCntPcu2>=100)&&(VpX1RCntPcu2>=100)"
 	## For j1808-1HzQPO, may want ELECTRON2 < 0.1
 	
-# 	"$script_dir"/gti_and_bkgd.sh "$out_dir" "$filtex" "$progress_log" "$evt_bkgd_list"
+	"$script_dir"/gti_and_bkgd.sh "$out_dir" "$filtex" "$progress_log" "$evt_bkgd_list"
 
 
 	##########################################################
 	## Built-in extraction of Standard-2f and event-mode data
 	##########################################################
  	
-# 	"$script_dir"/indiv_extract.sh "$out_dir" "$progress_log" "$list_dir"		
+	"$script_dir"/indiv_extract.sh "$out_dir" "$progress_log"
 
 
 	echo -e "Finished run for obsID=$obsID \n"				
@@ -301,104 +301,104 @@ if [ ! -e "$gti_file" ] ; then
 	exit
 fi
 
+########################################################
+## Make a mean event-mode spectrum -- needed for pcarsp
+########################################################
+
+echo "Extracting MEAN evt spectrum"
+echo "Extracting MEAN evt spectrum" >> $progress_log
+all_evt="$out_dir/all_evt.pha"
+if (( $(wc -l < $se_list) == 0 )); then
+	echo -e "\tERROR: No event-mode data files. Cannot run seextrct."
+	echo -e "\tERROR: No event-mode data files. Cannot run seextrct." >> $progress_log
+else
+	seextrct infile=@"$se_list" \
+		maxmiss=INDEF \
+		gtiorfile=- \
+		gtiandfile="$gti_file" \
+		outroot="${all_evt%.*}" \
+		bitfile="$list_dir"/bitfile_evt_PCU2 \
+		timecol="TIME" \
+		columns="Event" \
+		multiple=yes \
+		binsz=1 \
+		printmode=SPECTRUM \
+		lcmode=RATE \
+		spmode=SUM \
+		timemin=INDEF \
+		timemax=INDEF \
+		timeint=INDEF \
+		chmin=INDEF \
+		chmax=INDEF \
+		chint=INDEF \
+		chbin=INDEF \
+		mode=ql
+
+	if [ ! -e "$all_evt" ] ; then
+		echo -e "\tERROR: Total event-mode spectrum not made!"
+		echo -e "\tERROR: Total event-mode spectrum not made!" >> $progress_log
+	# 	exit
+	fi  ## End 'if $all_evt not made', i.e. if seextrct failed
+fi
+
 ###################################
-## Make a mean event-mode spectrum
+## Make a mean standard-2 spectrum
 ###################################
-# 
-# echo "Extracting MEAN evt spectrum"
-# echo "Extracting MEAN evt spectrum" >> $progress_log
-# all_evt="$out_dir/all_evt.pha"
-# if (( $(wc -l < $se_list) == 0 )); then
-# 	echo -e "\tERROR: No event-mode data files. Cannot run seextrct."
-# 	echo -e "\tERROR: No event-mode data files. Cannot run seextrct." >> $progress_log
-# else
-# 	seextrct infile=@"$se_list" \
-# 		maxmiss=INDEF \
-# 		gtiorfile=- \
-# 		gtiandfile="$gti_file" \
-# 		outroot="${all_evt%.*}" \
-# 		bitfile="$list_dir"/bitfile_evt_PCU2 \
-# 		timecol="TIME" \
-# 		columns="Event" \
-# 		multiple=yes \
-# 		binsz=1 \
-# 		printmode=SPECTRUM \
-# 		lcmode=RATE \
-# 		spmode=SUM \
-# 		timemin=INDEF \
-# 		timemax=INDEF \
-# 		timeint=INDEF \
-# 		chmin=INDEF \
-# 		chmax=INDEF \
-# 		chint=INDEF \
-# 		chbin=INDEF \
-# 		mode=ql
-# 
-# 	if [ ! -e "$all_evt" ] ; then
-# 		echo -e "\tERROR: Total event-mode spectrum not made!"
-# 		echo -e "\tERROR: Total event-mode spectrum not made!" >> $progress_log
-# 	# 	exit
-# 	fi  ## End 'if $all_evt not made', i.e. if seextrct failed
-# fi
-# 
-# ###################################
-# ## Make a mean standard-2 spectrum
-# ###################################
-# 
-# echo "Extracting MEAN std2 pcu 2 data"
-# echo "Extracting MEAN std2 pcu 2 data" >> $progress_log
-# all_std2="$out_dir/all_std2.pha"
-# cp "$list_dir"/std2_pcu2_cols.lst ./tmp_std2_pcu2_cols.lst
-# 
-# if (( $(wc -l < $sa_list) == 0 )); then
-# 	echo -e "\tERROR: No Standard-2 data files. Cannot run saextrct."
-# 	echo -e "\tERROR: No Standard-2 data files. Cannot run saextrct." >> $progress_log
-# else
-# 	saextrct lcbinarray=10000000 \
-# 		maxmiss=200 \
-# 		infile=@"$sa_list" \
-# 		gtiorfile=- \
-# 		gtiandfile="$gti_file" \
-# 		outroot="${all_std2%.*}" \
-# 		columns=@tmp_std2_pcu2_cols.lst \
-# 		accumulate=ONE \
-# 		timecol="Time" \
-# 		binsz=16 \
-# 		mfracexp=INDEF \
-# 		printmode=BOTH \
-# 		lcmode=RATE \
-# 		spmode=SUM \
-# 		mlcinten=INDEF \
-# 		mspinten=INDEF \
-# 		writesum=- \
-# 		writemean=- \
-# 		timemin=INDEF \
-# 		timemax=INDEF \
-# 		timeint=INDEF \
-# 		chmin=INDEF \
-# 		chmax=INDEF \
-# 		chint=INDEF \
-# 		chbin=INDEF \
-# 		dryrun=no \
-# 		clobber=yes
-# 
-# 	if [ -e $dump_file ] ; then rm -f $dump_file; fi
-# 
-# 	if [ ! -e "${all_std2%.*}.lc" ] ; then
-# 		echo -e "\tERROR: Total Standard-2 light curve not made!"
-# 		echo -e "\tERROR: Total Standard-2 light curve not made!" >> $progress_log
-# 	fi  ## End 'if lightcurve not made', i.e. if saextrct failed
-# 	if [ ! -e "$all_std2" ] ; then
-# 		echo -e "\tERROR: Total Standard-2 spectrum not made!"
-# 		echo -e "\tERROR: Total Standard-2 spectrum not made!" >> $progress_log
-# # 		exit
-# 	fi  ## End 'if spectrum not made', i.e. if saextrct failed
-# fi  ## End 'if there are std2 files in $sa_list'
-# 
-# echo "Done with total extractions."
-# 
-# ## Deleting the temporary file(s)
-# rm tmp_std2_pcu2_cols.lst
+
+echo "Extracting MEAN std2 pcu 2 data"
+echo "Extracting MEAN std2 pcu 2 data" >> $progress_log
+all_std2="$out_dir/all_std2.pha"
+cp "$list_dir"/std2_pcu2_cols.lst ./tmp_std2_pcu2_cols.lst
+
+if (( $(wc -l < $sa_list) == 0 )); then
+	echo -e "\tERROR: No Standard-2 data files. Cannot run saextrct."
+	echo -e "\tERROR: No Standard-2 data files. Cannot run saextrct." >> $progress_log
+else
+	saextrct lcbinarray=10000000 \
+		maxmiss=200 \
+		infile=@"$sa_list" \
+		gtiorfile=- \
+		gtiandfile="$gti_file" \
+		outroot="${all_std2%.*}" \
+		columns=@tmp_std2_pcu2_cols.lst \
+		accumulate=ONE \
+		timecol="Time" \
+		binsz=16 \
+		mfracexp=INDEF \
+		printmode=BOTH \
+		lcmode=RATE \
+		spmode=SUM \
+		mlcinten=INDEF \
+		mspinten=INDEF \
+		writesum=- \
+		writemean=- \
+		timemin=INDEF \
+		timemax=INDEF \
+		timeint=INDEF \
+		chmin=INDEF \
+		chmax=INDEF \
+		chint=INDEF \
+		chbin=INDEF \
+		dryrun=no \
+		clobber=yes
+
+	if [ -e $dump_file ] ; then rm -f $dump_file; fi
+
+	if [ ! -e "${all_std2%.*}.lc" ] ; then
+		echo -e "\tERROR: Total Standard-2 light curve not made!"
+		echo -e "\tERROR: Total Standard-2 light curve not made!" >> $progress_log
+	fi  ## End 'if lightcurve not made', i.e. if saextrct failed
+	if [ ! -e "$all_std2" ] ; then
+		echo -e "\tERROR: Total Standard-2 spectrum not made!"
+		echo -e "\tERROR: Total Standard-2 spectrum not made!" >> $progress_log
+# 		exit
+	fi  ## End 'if spectrum not made', i.e. if saextrct failed
+fi  ## End 'if there are std2 files in $sa_list'
+
+echo "Done with total extractions."
+
+## Deleting the temporary file(s)
+rm tmp_std2_pcu2_cols.lst
 
 #######################################################
 ## Adding the extracted event-mode background spectra.
@@ -411,7 +411,7 @@ fi
 ######################################################
 
 # "$script_dir"/analyze_filters.sh "$list_dir/${prefix}_propIDs.lst" "$prefix"
-"$script_dir"/analyze_filters.sh "$obsID_list" "$prefix" >> $progress_log
+# "$script_dir"/analyze_filters.sh "$obsID_list" "$prefix" >> $progress_log
 
 ################################################################################
 ## 					All done!
