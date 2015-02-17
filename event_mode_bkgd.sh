@@ -11,7 +11,10 @@
 ## 
 ################################################################################
 
+########################################
 ## Make sure the input arguments are ok
+########################################
+
 if (( $# != 4 )); then
     echo -e "\t\tUsage: ./event_mode_bkgd.sh <output dir> <evt bkgd list> <total evt spectrum> <progress log>\n"
     exit
@@ -24,7 +27,10 @@ progress_log=$4
 
 ################################################################################
 
+######################################
 ## If heainit isn't running, start it
+######################################
+
 if (( $(echo $DYLD_LIBRARY_PATH | grep heasoft | wc -l) < 1 )); then
 	. $HEADAS/headas-init.sh
 fi
@@ -49,86 +55,6 @@ cd "$out_dir"
 
 
 python "$script_dir"/addpha.py "$out_dir/all_event_bkgd.lst" "$ub_bkgd.pha" "$gti_file"
-
-# if (( $(wc -l < $bkgd_list) == 1 )) ; then
-# 
-# 	only_evt_bkgd_pha=$(cat $bkgd_list)
-# 	echo "$only_evt_bkgd_pha"
-# 	cp "$only_evt_bkgd_pha" "$ub_bkgd.pha"
-# 	
-# else
-# 	asdir="./tmp_addspec"; mkdir "$asdir"; cd "$asdir"
-# 	as_sums="addspec_listofsums.lst"
-# 	if [ -e "$as_sums" ]; then rm "$as_sums"; fi; touch "$as_sums"
-# 	i=1; j=1
-# 	as_list="addspec_list_${i}.lst"
-# 	if [ -e "$as_list" ]; then rm "$as_list"; fi; touch "$as_list"
-# 	
-# 	## addspec only allows to sum ~35 files at ones. So I break the files 
-# 	## into groups of 30, sum them, and then at the end I sum each of those
-# 	## sub-sums to get my total background spectrum.
-# 	
-# 	for item in $(cat "$bkgd_list"); do
-# 		cp $item "./${j}_"$(basename $item)
-# # 		echo "${j}_$(basename $item)"
-# 		echo "${j}_$(basename $item)" >> "$as_list"
-# 		
-# 		if (( j % 30 == 0 )) ; then 
-# # 			echo -e "\ti = $i"
-# 			temp_evt_bkgd="temp_evt_bkgd_${i}"
-# 			if [ -e "$temp_evt_bkgd.pha" ]; then rm "$temp_evt_bkgd.pha"; fi
-# # 			open "$as_list"
-# 
-# 			addspec infil="$as_list" \
-# 				outfil="$temp_evt_bkgd" \
-# 				qaddrmf=no \
-# 				qsubback=no \
-# 				clobber=no
-# 			echo "$temp_evt_bkgd.pha" >> $as_sums
-# 			(( i+=1 ))
-# 			as_list="addspec_list_${i}.lst"
-# 			if [ -e "$as_list" ]; then rm "$as_list"; fi; touch "$as_list"
-# 		fi
-# 		(( j+=1 ))
-# 
-# 	done
-# 	
-# 	## Doing the last leg (since it doesn't get done otherwise)
-# 	if (( j % 10 != 0 )); then
-# 		temp_evt_bkgd="temp_evt_bkgd_${i}"
-# 		if [ -e "$temp_evt_bkgd.pha" ]; then rm "$temp_evt_bkgd.pha"; fi
-# 
-# 		addspec infil="$as_list" \
-# 			outfil="$temp_evt_bkgd" \
-# 			qaddrmf=no \
-# 			qsubback=no \
-# 			clobber=no
-# 		echo "$temp_evt_bkgd.pha" >> $as_sums
-# 	fi
-# 	
-# 	################################################
-# 	## Now summing the sum groups of bkgd pha files
-# 	################################################
-# 
-# 	temp_evt_bkgd="temp_evt_bkgd_total"
-# 	if [ -e "$temp_evt_bkgd.pha" ]; then rm "$temp_evt_bkgd.pha"; fi
-# 	
-# 	addspec infil="$as_sums" \
-# 		outfil="$temp_evt_bkgd" \
-# 		qaddrmf=no \
-# 		qsubback=no \
-# 		clobber=no
-# 
-# 	if [ -e "$temp_evt_bkgd.pha" ]; then
-# 		mv "$temp_evt_bkgd.pha" "$ub_bkgd.pha"
-# 	else
-# 		echo -e "\tERROR: addspec of sums failed."
-# 		echo -e "\tERROR: addspec of sums failed." >> $progress_log
-# 	fi
-# 	
-# 	cd "$out_dir"
-# 	rm -rf "$asdir"  ## Removing the temporary directory
-# fi
 
 if [ ! -e "$ub_bkgd.pha" ]; then
 	echo -e "\tERROR: Adding the individual event-mode background spectra did not work."
