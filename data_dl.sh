@@ -83,7 +83,7 @@ for line in $( cat "$propID_list" ); do
 	
 	##	-r: recursive, i.e. get that and all sub-directories
 	##	-P: let the directory specified be the parent directory for saving
-	##  -nv: non-verbose (i.e. don't print much at all to the screen)
+	##  -nv: non-verbose (i.e. don't print much)
 	##	-nH: cut the web address out of the directory saving name
 	##  -a: append output to specified log file
 	##	-cut-dirs=5: literally all i want to save the name as is 'obsID' in the parent dir
