@@ -18,7 +18,7 @@ and counts. Error is summed in quadrature."
 
 Written in Python 2.7.
 
-Example: python addpha.py tmp_phas.txt ./tmp_out.pha tmp_all.gti
+Example call: python addpha.py tmp_phas.txt ./tmp_out.pha tmp_all.gti
 
 """
 
