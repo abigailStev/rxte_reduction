@@ -1,6 +1,6 @@
 #!/bin/bash
 
-###############################################################################
+################################################################################
 ##
 ## This bash version was written by Abigail Stevens, 2015
 ## 
@@ -30,11 +30,11 @@
 ##     05/02/2015 -- abbiev1.4 -- does list of propIDs
 ##     11/02/2015 -- abbiev1.5 -- uses xargs to trim leading whitespace from 
 ##								  number variables
-###############################################################################
+################################################################################
 
 ## Make sure the input arguments are ok
 if (( $# != 2 )); then
-    echo -e "\t\tUsage: ./xtescan.sh <ID list> <filename prefix>"
+    echo -e "\t\tUsage: ./xtescan.sh <ID list> <filename prefix>\n"
     exit
 fi
 
@@ -55,7 +55,7 @@ config_list="$reduced_dir/${prefix}_config.lst"
 if [ -e $allinfo_list ]; then rm -f $allinfo_list; fi; touch $allinfo_list
 if [ -e $config_list ]; then rm -f $config_list; fi; touch $config_list
 
-###############################################################################
+################################################################################
 
 ##############################
 ## Loop over all proposal IDs
@@ -155,7 +155,7 @@ for line in $( cat "$proplist" ); do
 done
 echo "--"
 
-###############################################################################
+################################################################################
 ## For each unique datamode used, make a list of filenames
 
 echo "-- Number of files per unique PCA data mode:"
@@ -183,7 +183,7 @@ echo "-- Information on each data mode in files ${prefix}_<datamode>.lst"
 echo "--                                        ${prefix}_<datamode>.xdf"
 echo "--"
 
-###############################################################################
+################################################################################
 ## All done
 if [ -e timestep.txt ]; then rm -f timestep.txt; fi
 if [ -e timestart.txt ]; then rm -f timestart.txt; fi
@@ -192,4 +192,4 @@ if [ -e config.txt ]; then rm -f config.txt; fi
 
 echo "-- Finished xte_scan.sh."
 
-###############################################################################
+################################################################################
