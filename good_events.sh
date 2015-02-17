@@ -1,14 +1,16 @@
 #! /bin/bash
 
-###############################################################################
+################################################################################
 ##
 ## Bash script that decodes the binary event list and runs apply_gti.py
 ##
 ##
 ## Written by Abigail Stevens, A.L.Stevens@uva.nl, 2014-2015
-###############################################################################
+################################################################################
 
+########################################
 ## Make sure the input arguments are ok
+########################################
 if (( $# != 3 )); then
     echo -e "\t\tUsage: ./good_events.sh <prefix> <obs ID list> <GTI'd event list to write to>\n"
     exit
@@ -18,14 +20,16 @@ prefix=$1
 obsID_list=$2
 gtideventlist_list=$3
 
+######################################
 ## If heainit isn't running, start it
+######################################
 if (( $(echo $DYLD_LIBRARY_PATH | grep heasoft | wc -l) < 1 )); then
 	. $HEADAS/headas-init.sh
 fi
 
 home_dir=$(ls -d ~)
 exe_dir="$home_dir/Dropbox/Research/rxte_reduce"
-red_dir="$home_dir/Reduced_data/$prefix/"
+red_dir="$home_dir/Reduced_data/$prefix"
 
 if [ -e "$gtideventlist_list" ]; then rm "$gtideventlist_list"; fi; touch "$gtideventlist_list"
 
@@ -90,8 +94,8 @@ for obsID in $( cat "$obsID_list" ); do
 done  ## End of looping through obsIDs in obsID_list
 
 
-###############################################################################
+################################################################################
 ## All done!
 
 echo "'Good events' script is finished."
-###############################################################################
+################################################################################
