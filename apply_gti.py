@@ -1,3 +1,4 @@
+#!//anaconda/bin/python
 import argparse
 import numpy as np
 from astropy.io import fits
@@ -7,7 +8,7 @@ from tools import get_key_val   # https://github.com/abigailStev/whizzy_scripts
 
 __author__ = "Abigail Stevens"
 __author_email__ = "A.L.Stevens@uva.nl"
-__year__ = "2014"
+__year__ = "2014-2015"
 __description__ = "Applies a GTI to an RXTE decoded event list, to filter out \
 events in bad times. This code assumes that the GTI times have not been \
 previously corrected with TIMEZERO, but does assume the start time is at the \
