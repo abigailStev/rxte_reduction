@@ -73,7 +73,12 @@ added.")
     ###########################################################################
     
     for fits_file in infiles:
-    	file_hdu = fits.open(fits_file)		
+    	try:
+			fits_hdu = fits.open(fits_file)
+		except IOError:
+			print "\tERROR: File does not exist: %s" % fits_file
+			continue
+    	
     	exposure += float(file_hdu[1].header['EXPOSURE'])
     	spectrum += file_hdu[1].data.field('COUNTS')
     	sq_error += np.square(file_hdu[1].data.field('STAT_ERR'))
