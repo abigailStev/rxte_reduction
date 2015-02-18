@@ -74,8 +74,8 @@ added.")
     
     for fits_file in infiles:
     	try:
-			fits_hdu = fits.open(fits_file)
-		except IOError:
+    		file_hdu = fits.open(fits_file)
+    	except IOError:
 			print "\tERROR: File does not exist: %s" % fits_file
 			continue
     	
@@ -90,7 +90,12 @@ added.")
     
 
     ## Getting header keyword values from the last file
-    lastfile = fits.open(infiles[-1])
+    try:
+    	lastfile = fits.open(infiles[-1])
+    except IOError:
+    	print "\tERROR: File does not exist: %s" % infiles[-1]
+    	exit()
+    	
     tstop = lastfile[0].header['TSTOP']
     dateend = lastfile[0].header['DATE-END']
     timeend = lastfile[0].header['TIME-END']
@@ -99,7 +104,12 @@ added.")
     lastfile.close()
 	
 	## Getting the GTI data from the gti file (to save to ext 2 of the output)
-    gti_hdu = fits.open(args.gti_file)
+    try:
+    	gti_hdu = fits.open(args.gti_file)
+    except IOError:
+    	print "\tERROR: File does not exist: %s" % args.gti_file
+    	exit()
+    	
     all_gti_data = gti_hdu[1].data
     gti_hdu.close()
 	
