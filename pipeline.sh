@@ -33,15 +33,13 @@ out_dir_prefix="$home_dir/Reduced_data"  ## Prefix of output directory
 # list_dir="$home_dir/Dropbox/Research/sample_data"
 # out_dir_prefix="$home_dir/Dropbox/Research/sample_data"
 # prefix="P70080"
-# prefix="P95335"
-# prefix="P95409"
-# prefix="saxj1808-2002"
-prefix="GX339-BQPO"
+# prefix="j1808-2002"
+# prefix="GX339-BQPO"
+prefix="GX339-soft"
 # prefix="j1808-1HzQPO"
-# prefix="GX339"
 datamode="E_125us_64M_0_1s"  ## 
-dt=16  ## Multiple of the time resolution of the data for ps and ccf
-numsec=64  ## Length of segments in seconds of Fourier segments for analysis
+dt=4  ## Multiple of the time resolution of the data for ps and ccf
+numsec=32  ## Length of segments in seconds of Fourier segments for analysis
 testing=0  ## 1 is yes, 0 is no
 
 day=$(date +%y%m%d)  # make the date a string and assign it to 'day'
@@ -49,27 +47,32 @@ day=$(date +%y%m%d)  # make the date a string and assign it to 'day'
 # day="150202"
 # day="150211"
 
-lc_plot="$out_dir_prefix/${prefix}/std2_lc.png"
+propID_list="$list_dir/${prefix}_propIDs.lst"
 
-# newfile_list="$list_dir/${propID}_newfiles_1.lst"
-# obsID_list="$list_dir/${propID}_obsIDs_1.lst"
-# event_list="$list_dir/${propID}_eventlists_1.lst"
-# newfile_list="$list_dir/${propID}_newfiles_2.lst"
-# obsID_list="$list_dir/${propID}_obsIDs_2.lst"
-# event_list="$list_dir/${propID}_eventlists_2.lst"
-# obsID_list="$list_dir/${propID}_obsIDs_half.lst"
-# event_list="$list_dir/${propID}_eventlists_half.lst"
-# newfile_list="$list_dir/${propID}_newfiles.lst"
-# obsID_list="$list_dir/${propID}_obsIDs.lst"
-# event_list="$list_dir/${propID}_eventlists.lst"
+# newfile_list="$list_dir/${prefix}_newfiles_1.lst"
+# obsID_list="$list_dir/${prefix}_obsIDs_1.lst"
+# event_list="$list_dir/${prefix}_eventlists_1.lst"
+# newfile_list="$list_dir/${prefix}_newfiles_2.lst"
+# obsID_list="$list_dir/${prefix}_obsIDs_2.lst"
+# event_list="$list_dir/${prefix}_eventlists_2.lst"
+# obsID_list="$list_dir/${prefix}_obsIDs_half.lst"
+# event_list="$list_dir/${prefix}_eventlists_half.lst"
+# newfile_list="$list_dir/${prefix}_newfiles.lst"
+# obsID_list="$list_dir/${prefix}_obsIDs.lst"
+# event_list="$list_dir/${prefix}_eventlists.lst"
 
 # newfile_list="$list_dir/${prefix}_${datamode}_1.xdf"
 # obsID_list="$list_dir/${prefix}_obsIDs_1.lst"
 # event_list="$list_dir/${prefix}_eventlists_1.lst"
+# newfile_list="$list_dir/${prefix}_${datamode}_2.xdf"
+# obsID_list="$list_dir/${prefix}_obsIDs_2.lst"
+# event_list="$list_dir/${prefix}_eventlists_2.lst"
+# newfile_list="$list_dir/${prefix}_${datamode}_half.xdf"
+# obsID_list="$list_dir/${prefix}_obsIDs_half.lst"
+# event_list="$list_dir/${prefix}_eventlists_half.lst"
 newfile_list="$list_dir/${prefix}_${datamode}.xdf"
 obsID_list="$list_dir/${prefix}_obsIDs.lst"
 event_list="$list_dir/${prefix}_eventlists.lst"
-# event_list="$list_dir/${prefix}_eventlists_1.lst"
 
 ################################################################################
 ################################################################################
@@ -87,19 +90,28 @@ fi
 
 ################################################################################
 ##
-## 		Make list of new files
+##		Download the data
 ##
+################################################################################
+echo -e "\n--- Download data ---"
+
+"$script_dir"/data_dl.sh "$propID_list"
+
+
+################################################################################
+##																			  ##
+## 		Make list of new files to be reduced/analyzed						  ##
+##																			  ##
 ################################################################################
 echo -e "\n--- Make list of files to be reduced ---"
 
-# "$home_dir/Dropbox/Scripts"/make_file_list.sh "$propID" "$newfile_list"
-# time "$script_dir"/xtescan.sh "${prefix}" "$obsID_list"
+time "$script_dir"/xtescan.sh "${prefix}" "$propID_list"
 
 
 ################################################################################
-##
-## 		Reduce RXTE data
-##
+##																			  ##
+## 		Reduce RXTE data													  ##
+##																			  ##
 ################################################################################
 echo -e "\n--- Reduce data ---"
 cd "$script_dir"
@@ -109,65 +121,67 @@ echo "$(pwd)/progress.log"
 ## The first line is good for debugging with only one obsID
 ## The second line is for long runs. 
 # time "$script_dir"/rxte_reduce_data.sh "$newfile_list" "$obsID_list" "${prefix}" 
-# time "$script_dir"/rxte_reduce_data.sh "$newfile_list" "$obsID_list" "${prefix}" > run.log
+time "$script_dir"/rxte_reduce_data.sh "$newfile_list" "$obsID_list" "${prefix}" > run.log
 
 
 ################################################################################
-##
-## 		Plot standard-2 light curve
-##
+##																			  ##
+## 		Plot the Standard-2 light curve										  ##
+##																			  ##
 ################################################################################
 echo -e "\n--- Plot Standard 2 light curve ---"
 cd "$script_dir"
 
+# lc_plot="$out_dir_prefix/${prefix}/std2_lc.png"
 # python "$script_dir"/plot_std2_lightcurve.py "$prefix" "$obsID_list" "$lc_plot"
-# if [ -e "$lightcurve_plot" ]; then
-# 	open "$lightcurve_plot"
-# fi
+# if [ -e "$lightcurve_plot" ]; then open "$lightcurve_plot"; fi
 
 
 ################################################################################
-##
-## 		Make good event list
-##
+##																			  ##
+## 		Make lists of good events											  ##
+##																			  ##
 ################################################################################
 echo -e "\n--- Good event list ---"
 cd "$script_dir"
 
-# time "$script_dir"/good_events.sh "$prefix" "$obsID_list" "$event_list"
+time "$script_dir"/good_events.sh "$prefix" "$obsID_list" "$event_list"
 
 
 ################################################################################
-##
-## 		Power spectrum
-##
+##																			  ##
+## 		Power spectrum 														  ##
+##																			  ##
 ################################################################################
 echo -e "\n--- Power spectrum ---"
 cd "$ps_dir"
 
-time "$ps_dir"/run_multi_powerspec.sh "$event_list" "$prefix" "$dt" "$numsec" "$testing" "$day"
+time "$ps_dir"/run_multi_powerspec.sh "$event_list" "$prefix" "$dt" "$numsec" \
+	"$testing" "$day"
 
 
 ################################################################################
-##
-## 		Cross-correlation function
-##
+##																			  ##
+## 		Cross-correlation function											  ##
+##																			  ##
 ################################################################################
 echo -e "\n--- CCF ---"
 cd "$ccf_dir"
 
-time "$ccf_dir"/run_multi_CCF.sh "$event_list" "$prefix" "$dt" "$numsec" "$testing" "$day"
+# time "$ccf_dir"/run_multi_CCF.sh "$event_list" "$prefix" "$dt" "$numsec" \
+# 	"$testing" "$day"
 
 
 ################################################################################
-##
-## 		Energy spectrum
-##
+##																			  ##
+## 		Energy spectra														  ##
+##																			  ##
 ################################################################################
 echo -e "\n--- Energy spectra ---"
 cd "$es_dir"
 
-# time "$es_dir"/run_energyspec.sh "$prefix" "$obsID_list" "$dt" "$numsec" "$testing" "$day"
+# time "$es_dir"/run_energyspec.sh "$prefix" "$obsID_list" "$dt" "$numsec" \
+# 	"$testing" "$day"
 
 
 ################################################################################
