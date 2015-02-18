@@ -11,17 +11,17 @@ import argparse
 """
 ################################################################################
 def main(filter_list, prefix, data_dir):
-
+	
+	###################
+	## Initializations
+	###################
+	
 	tab_file = data_dir+"/filters.dat"
 	tab2_file = data_dir+"/filter_info.txt"
 	out_file1 = data_dir+"/obsID_pcus.png"
 	out_file2 = data_dir+"/pcus_on.png"
 	filter_files = [line.strip() for line in open(filter_list)]
-
 	num = len(filter_files)
-	# print num
-	
-	
 	obsIDs = []
 	num_pcus_on_array = np.asarray([])
 	avg_pcus_on_array = np.asarray([])
@@ -36,10 +36,14 @@ def main(filter_list, prefix, data_dir):
 	pcu3_avg_array = np.asarray([])
 	pcu4_on_array = np.asarray([])
 	pcu4_avg_array = np.asarray([])
-
-	font_prop = font_manager.FontProperties(size=8)
 	i = 1
-	#################################################
+	
+	font_prop = font_manager.FontProperties(size=8)
+	
+	####################################
+	## Looping through the filter files
+	####################################
+	
 	for filter_file in filter_files:
 		try:
 			file_hdu = fits.open(filter_file)
@@ -79,19 +83,19 @@ def main(filter_list, prefix, data_dir):
 		pcu4_avg = np.mean(pcu4)
 	
 	
-# 		ax1 = plt.subplot(3, 4, i)
-# 		ax1.plot(time, num_pcu, 'y-.', lw=4)
-# 		ax1.plot(time, pcu2, 'k', lw=1)
-# 		ax1.plot(time, pcu0, 'r--', lw=3)
-# 		ax1.plot(time, pcu1, 'b:', lw=3)
-# 		ax1.plot(time, pcu3, 'g--', lw=2)
-# 		ax1.plot(time, pcu4, 'm:', lw=2)
-# 		ax1.set_ylim(0, np.max(num_pcu)+0.25)
-# 		ax1.set_xlabel("Time (minutes)", fontproperties=font_prop)
-# 		ax1.tick_params(axis='x', labelsize=8)
-# 		ax1.tick_params(axis='y', labelsize=8)
-# 		ax1.set_title(obsID, fontsize=10)
-#		i += 1
+		ax1 = plt.subplot(3, 4, i)
+		ax1.plot(time, num_pcu, 'y-.', lw=4)
+		ax1.plot(time, pcu2, 'k', lw=1)
+		ax1.plot(time, pcu0, 'r--', lw=3)
+		ax1.plot(time, pcu1, 'b:', lw=3)
+		ax1.plot(time, pcu3, 'g--', lw=2)
+		ax1.plot(time, pcu4, 'm:', lw=2)
+		ax1.set_ylim(0, np.max(num_pcu)+0.25)
+		ax1.set_xlabel("Time (minutes)", fontproperties=font_prop)
+		ax1.tick_params(axis='x', labelsize=8)
+		ax1.tick_params(axis='y', labelsize=8)
+		ax1.set_title(obsID, fontsize=10)
+		i += 1
 
 		pcus_on = ""
 		if pcu0_on > 0:
@@ -122,10 +126,10 @@ def main(filter_list, prefix, data_dir):
 	
 	## End of for loop through filter files
 	
-# 	plt.tight_layout()
-# 	plt.savefig(out_file1, dpi=300)
-# 	# plt.show()
-# 	plt.close()
+	plt.tight_layout()
+	plt.savefig(out_file1, dpi=300)
+	# plt.show()
+	plt.close()
 
 	tmp = np.arange(num)+0.5
 	pcu_stack = np.column_stack((pcu0_on_array, pcu1_on_array, pcu2_on_array, pcu3_on_array, pcu4_on_array))
@@ -178,6 +182,10 @@ def main(filter_list, prefix, data_dir):
 
 ################################################################################
 if __name__ == "__main__":
+	
+	##############################################
+	## Parsing input arguments and calling 'main'
+	##############################################
 	
 	parser = argparse.ArgumentParser(usage='', description='', epilog='')
 	parser.add_argument('filter_list', help="List of filter files.")
