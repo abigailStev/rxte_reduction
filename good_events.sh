@@ -12,7 +12,7 @@
 ## Make sure the input arguments are ok
 ########################################
 if (( $# != 3 )); then
-    echo -e "\t\tUsage: ./good_events.sh <prefix> <obs ID list> <GTI'd event list to write to>\n"
+    echo -e "\t\tUsage: ./good_events.sh <prefix> <obs ID list> <list of GTI'd event lists to write to>\n"
     exit
 fi
 
@@ -30,6 +30,7 @@ fi
 home_dir=$(ls -d ~)
 exe_dir="$home_dir/Dropbox/Research/rxte_reduce"
 red_dir="$home_dir/Reduced_data/$prefix"
+
 
 if [ -e "$gtideventlist_list" ]; then rm "$gtideventlist_list"; fi; touch "$gtideventlist_list"
 
@@ -58,7 +59,7 @@ for obsID in $( cat "$obsID_list" ); do
 			##################################
 			
 			if [ -e "$binaryfile" ]; then
-				decodeevt infile="$binaryfile" outfile="$eventlist"
+				decodeevt infile="$binaryfile" outfile="$eventlist" > dump.txt
 			else
 				echo -e "\tBinary file not decoded; does not exist."
 				continue
@@ -96,6 +97,6 @@ done  ## End of looping through obsIDs in obsID_list
 
 ################################################################################
 ## All done!
-
+if [ -e dump.txt ]; then rm dump.txt; fi
 echo "'Good events' script is finished."
 ################################################################################
