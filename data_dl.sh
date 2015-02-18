@@ -1,6 +1,6 @@
 #!/bin/bash
 
-###############################################################################
+################################################################################
 ##
 ## Downloads raw data directories from the RXTE remote archives.
 ## Requires a list of proposal IDs with the archive prefix, and for each
@@ -9,7 +9,8 @@
 ## Usage: ./data_dl.sh <proposal_ID_list>
 ##
 ## Written by Abigail Stevens, A.L.Stevens@uva.nl, 2013-2015
-###############################################################################
+## 
+################################################################################
 
 ## Make sure the input arguments are ok
 if (( $# != 1 )); then
@@ -32,7 +33,8 @@ fi
 
 if [ -e "$dl_log" ]; then rm "$dl_log"; fi
 
-###############################################################################
+################################################################################
+
 for line in $( cat "$propID_list" ); do
 	
 	IFS=',' read -a array <<< "$line"
@@ -60,16 +62,16 @@ for line in $( cat "$propID_list" ); do
 	
 	## Make a list of the web archive address of each directory of obsIDs I want
 	for obsID in $( cat "$obsID_list" ); do
-		web_dir="$web_archive/$obsID/"
+		web_dir="${web_archive}/$obsID/"
 
 		## Only get the obsIDs I don't already have
-# 		if [ ! -d "$data_dir/$obsID" ]; then
+		if [ ! -d "$data_dir/$obsID" ]; then
 			echo "$web_dir" >> "$dl_list"
-# 		fi
+		fi
 	done
 	
 	## If there's nothing in the download list, tell the user and exit.
-	if (( $(wc -l < $dl_list) == 0 )); then
+	if (( $( wc -l < $dl_list ) == 0 )); then
 		echo -e "\tNothing new to download. Continuing to next propID."
 		continue
 	fi
@@ -77,6 +79,7 @@ for line in $( cat "$propID_list" ); do
 	###############################################
 	## Download those remote directories with wget
 	################################################
+	echo "List of files to be downloaded: $dl_list"
 	echo "Download log: $dl_log"
 	
 	wget -r -P $data_dir -a $dl_log -nv -nH --cut-dirs=5 -i "$dl_list"
@@ -91,13 +94,8 @@ for line in $( cat "$propID_list" ); do
 # 	break
 done
 
-###############################################################################
-## Run xtescan on the data after it's downloaded
-
-time "$home_dir/Dropbox/Research/rxte_reduce"/xtescan.sh j1808-1HzQPO "$propID_list"
-
-###############################################################################
+################################################################################
 ## All done!
 echo "Finished data_dl.sh"
 
-###############################################################################
+################################################################################
