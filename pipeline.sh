@@ -34,20 +34,19 @@ out_dir_prefix="$home_dir/Reduced_data"  ## Prefix of output directory
 # out_dir_prefix="$home_dir/Dropbox/Research/sample_data"
 # prefix="P70080"
 # prefix="j1808-2002"
-# prefix="GX339-BQPO"
-prefix="GX339-soft"
+prefix="GX339-BQPO"
+# prefix="GX339-soft"
 # prefix="j1808-1HzQPO"
+# prefix="4U0614"
 datamode="E_125us_64M_0_1s"  ## 
-dt=4  ## Multiple of the time resolution of the data for ps and ccf
-numsec=32  ## Length of segments in seconds of Fourier segments for analysis
+dt=16  ## Multiple of the time resolution of the data for ps and ccf
+numsec=64  ## Length of segments in seconds of Fourier segments for analysis
 testing=0  ## 1 is yes, 0 is no
 
 day=$(date +%y%m%d)  # make the date a string and assign it to 'day'
 # day="150128"
 # day="150202"
 # day="150211"
-
-propID_list="$list_dir/${prefix}_propIDs.lst"
 
 # newfile_list="$list_dir/${prefix}_newfiles_1.lst"
 # obsID_list="$list_dir/${prefix}_obsIDs_1.lst"
@@ -95,7 +94,8 @@ fi
 ################################################################################
 echo -e "\n--- Download data ---"
 
-"$script_dir"/data_dl.sh "$propID_list"
+# echo ./download_obsIDs.sh "$obsID_list"
+# "$script_dir"/download_obsIDs.sh "$obsID_list"
 
 
 ################################################################################
@@ -105,7 +105,8 @@ echo -e "\n--- Download data ---"
 ################################################################################
 echo -e "\n--- Make list of files to be reduced ---"
 
-time "$script_dir"/xtescan.sh "${prefix}" "$propID_list"
+# echo time ./xtescan.sh "${prefix}" "$propID_list"
+# time "$script_dir"/xtescan.sh "${prefix}" "$propID_list"
 
 
 ################################################################################
@@ -121,7 +122,8 @@ echo "$(pwd)/progress.log"
 ## The first line is good for debugging with only one obsID
 ## The second line is for long runs. 
 # time "$script_dir"/rxte_reduce_data.sh "$newfile_list" "$obsID_list" "${prefix}" 
-time "$script_dir"/rxte_reduce_data.sh "$newfile_list" "$obsID_list" "${prefix}" > run.log
+# echo time ./rxte_reduce_data.sh "$newfile_list" "$obsID_list" "${prefix}" > run.log
+# time "$script_dir"/rxte_reduce_data.sh "$newfile_list" "$obsID_list" "${prefix}" > run.log
 
 
 ################################################################################
@@ -133,6 +135,7 @@ echo -e "\n--- Plot Standard 2 light curve ---"
 cd "$script_dir"
 
 # lc_plot="$out_dir_prefix/${prefix}/std2_lc.png"
+# echo python ./plot_std2_lightcurve.py "$prefix" "$obsID_list" "$lc_plot"
 # python "$script_dir"/plot_std2_lightcurve.py "$prefix" "$obsID_list" "$lc_plot"
 # if [ -e "$lightcurve_plot" ]; then open "$lightcurve_plot"; fi
 
@@ -145,7 +148,8 @@ cd "$script_dir"
 echo -e "\n--- Good event list ---"
 cd "$script_dir"
 
-time "$script_dir"/good_events.sh "$prefix" "$obsID_list" "$event_list"
+# echo time ./good_events.sh "$prefix" "$obsID_list" "$event_list"
+# time "$script_dir"/good_events.sh "$prefix" "$obsID_list" "$event_list"
 
 
 ################################################################################
@@ -156,8 +160,10 @@ time "$script_dir"/good_events.sh "$prefix" "$obsID_list" "$event_list"
 echo -e "\n--- Power spectrum ---"
 cd "$ps_dir"
 
-time "$ps_dir"/run_multi_powerspec.sh "$event_list" "$prefix" "$dt" "$numsec" \
-	"$testing" "$day"
+# echo time ./run_multi_powerspec.sh "$event_list" "$prefix" "$dt" "$numsec" \
+# 	"$testing" "$day"
+# time "$ps_dir"/run_multi_powerspec.sh "$event_list" "$prefix" "$dt" "$numsec" \
+# 	"$testing" "$day"
 
 
 ################################################################################
@@ -168,8 +174,10 @@ time "$ps_dir"/run_multi_powerspec.sh "$event_list" "$prefix" "$dt" "$numsec" \
 echo -e "\n--- CCF ---"
 cd "$ccf_dir"
 
-# time "$ccf_dir"/run_multi_CCF.sh "$event_list" "$prefix" "$dt" "$numsec" \
-# 	"$testing" "$day"
+echo time ./run_multi_CCF.sh "$event_list" "$prefix" "$dt" "$numsec" \
+	"$testing" "$day"
+time "$ccf_dir"/run_multi_CCF.sh "$event_list" "$prefix" "$dt" "$numsec" \
+	"$testing" "$day"
 
 
 ################################################################################
@@ -180,6 +188,8 @@ cd "$ccf_dir"
 echo -e "\n--- Energy spectra ---"
 cd "$es_dir"
 
+# echo time ./run_energyspec.sh "$prefix" "$obsID_list" "$dt" "$numsec" \
+# 	"$testing" "$day"
 # time "$es_dir"/run_energyspec.sh "$prefix" "$obsID_list" "$dt" "$numsec" \
 # 	"$testing" "$day"
 
