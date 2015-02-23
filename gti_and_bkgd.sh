@@ -7,6 +7,15 @@
 ## Inspired by G. Lamer (gl@astro.soton.ac.uk)'s script 'getgtibackxrb'
 ##     or maybe Phil wrote the c-shell version, it's unclear.
 ## 
+## Example call: 
+##	./gti_and_bkgd.sh /out/put/dir filterexpression progress.log evt_bkgd.lst
+##
+## Change the directory names and specifiers before the double '#' row to best
+## suit your setup.
+##
+## Notes: HEASOFT 6.11.*, bash 3.*, and Python 2.7.* (with supporting libraries) 
+## 		  must be installed in order to run this script. 
+##
 ## Abigail Stevens, A.L.Stevens@uva.nl, 2014-2015 
 ## 
 ################################################################################
@@ -87,7 +96,7 @@ for std2_pca_file in $(ls $out_dir/"std2"*.pca); do
 	## These bkgd files don't have gain correction applied. Use them with
 	## Standard-2 or Standard-1b data.
 	############################################################################
-# 	
+	
 # 	echo "Making Standard-2 background."
 # 	echo "Making Standard-2 background." >> $progress_log
 # 	std2_bkgd=${std2_pca_file%.*}"_std2.bkgd"
@@ -150,7 +159,7 @@ for std2_pca_file in $(ls $out_dir/"std2"*.pca); do
 # 		echo -e "\tERROR: Standard-2 background file not made."
 # 		echo -e "\tERROR: Standard-2 background file not made." >> $progress_log
 # 	fi
-	
+# 	
 	############################################################################
 	## Event-mode background
 	##
@@ -249,7 +258,7 @@ done
 ## All done!
 
 ## Deleting the temp file(s)
-rm tmp_std2_pcu2_cols.lst
+# if [ -e tmp_std2_pcu2_cols.lst ]; then rm tmp_std2_pcu2_cols.lst; fi
 
 echo "Finished making GTI and background."
 echo "Finished making GTI and background." >> $progress_log
