@@ -12,10 +12,10 @@
 ## of XTE data (using FTOOLS)
 ##
 ## Calling sequence:
-##    ./xtescan.sh <obsid list> <filename prefix> 
+##    ./xtescan.sh <filename prefix> <obsid list> 
 ##
 ## Example:
-##    > ./xtescan.sh obsid.lst cygx1 
+##    > ./xtescan.sh cygx1 obsid.lst 
 ##
 ## Output are the following files:
 ##     <fileprefix>_allinfo.lst     - details of every file
@@ -34,7 +34,7 @@
 
 ## Make sure the input arguments are ok
 if (( $# != 2 )); then
-    echo -e "\t\tUsage: ./xtescan.sh <ID list> <filename prefix>\n"
+    echo -e "\t\tUsage: ./xtescan.sh <filename prefix> <prop ID list>\n"
     exit
 fi
 
@@ -67,9 +67,9 @@ for line in $( cat "$proplist" ); do
 	obslist="$list_dir/${propID}_dl_obsIDs.txt"
 	data_dir="$home_dir/Data/RXTE/$propID"
 	
-	##########################################
-	## Loop over all PCA index files (ObsIDs)
-	##########################################
+	########################
+	## Loop over all obsIDs
+	########################
 	
 	for obsid in $( cat "$obslist" ) ; do
 		
@@ -85,7 +85,7 @@ for line in $( cat "$proplist" ); do
 			echo -e "\tERROR: No PCA science files for $obsid."
 			continue
 		else
-			echo "-- Searching $obsid, found $n files." | xargs
+			echo "Searching $obsid, found $n files." | xargs
 		fi
 
 		## Loop over each PCA data file within the ObsID
@@ -133,7 +133,7 @@ for line in $( cat "$proplist" ); do
 			obsdate=$( python -c "from tools import get_key_val; print get_key_val('$pcafile', 1, 'DATE-OBS')" )
 
 			## Tell the user what we have found so far
-			echo "-- $i /$n -- $datamode $deltaT 2^$dt2" | xargs
+			echo -e "\t$i /$n -- $datamode $deltaT 2^$dt2" | xargs
 
 			## For this file add the filename, config, date and time to the output file 
 			echo "$pcafile $datamode $obsdate 2^$dt2" >> $allinfo_list
@@ -153,19 +153,19 @@ for line in $( cat "$proplist" ); do
 	done
 ## End of loop over each proposal ID
 done
-echo "--"
+echo ""
 
 ################################################################################
 ## For each unique datamode used, make a list of filenames
 
-echo "-- Number of files per unique PCA data mode:"
-echo "--"
+echo "Number of files per unique PCA data mode:"
+echo ""
 for datamode in $( more $config_list ); do
 	list_file="$reduced_dir/${prefix}_${datamode}.lst"
 	if [ -e $list_file ]; then rm -f $list_file; fi; touch $list_file
 	grep $datamode $allinfo_list >> $list_file
 	count=$( cat $list_file | wc -l )
-	echo "-- $count $datamode"
+	echo -e "\t$count $datamode" | xargs
 	
 	## Put the filenames only in an .xdf file, with full path
 
@@ -178,10 +178,10 @@ for datamode in $( more $config_list ); do
 done
 
 ## Tell the user where the output files are
-if [ -e ${prefix}_allinfo.lst ]; then echo "-- All data in file ${prefix}_allinfo.lst"; fi
-echo "-- Information on each data mode in files ${prefix}_<datamode>.lst"
-echo "--                                        ${prefix}_<datamode>.xdf"
-echo "--"
+if [ -e ${prefix}_allinfo.lst ]; then echo "All data in file ${prefix}_allinfo.lst"; fi
+echo "Information on each data mode in files ${prefix}_<datamode>.lst"
+echo "                                       ${prefix}_<datamode>.xdf"
+echo ""
 
 ################################################################################
 ## All done
@@ -190,6 +190,6 @@ if [ -e timestart.txt ]; then rm -f timestart.txt; fi
 if [ -e datamode.txt ]; then rm -f datamode.txt; fi
 if [ -e config.txt ]; then rm -f config.txt; fi
 
-echo "-- Finished xte_scan.sh."
+echo "Finished xte_scan.sh."
 
 ################################################################################
