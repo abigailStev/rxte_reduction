@@ -54,7 +54,7 @@ for obsID in $( cat "$obsID_list" ); do
 	## If there are event files to decode in this obsID
 	####################################################
 	
-	if (( num_files>0 )); then
+	if (( num_files > 0 )); then
 		
 		#######################################################
 		## Looping through the different event files per obsID
@@ -84,11 +84,12 @@ for obsID in $( cat "$obsID_list" ); do
 		##################################################################
 		
 		merged_eventlist="$data_dir/eventlist.fits"
-		temp_list="${data_dir}/multi_evts.lst"
+		orbits_list="${data_dir}/multi_evts.lst"
 		
 		if (( num_files > 1 )); then
-			ls "$data_dir"/eventlist_*.fits > $temp_list
-			fmerge infiles=@"$temp_list" \
+			echo "Multiple orbits per obsID. Merging eventlists."
+			ls "$data_dir"/eventlist_*.fits > $orbits_list
+			fmerge infiles=@"$orbits_list" \
 				outfile="$merged_eventlist" \
 				columns=- \
 				copyprime=yes \
@@ -97,7 +98,7 @@ for obsID in $( cat "$obsID_list" ); do
 		else  ## If there's only one file, just copy it
 			cp "${eventlist}" "${merged_eventlist}"
 		fi
-		echo "$merged_eventlist"
+
 		gtid_eventlist="$data_dir/GTId_eventlist.fits"
 	# 	gtid_eventlist="$data_dir/GTId_eventlist.dat"
 	
@@ -122,12 +123,11 @@ for obsID in $( cat "$obsID_list" ); do
 			if (( $naxis2 > 0 )); then
 				echo "$gtid_eventlist" >> $gtideventlist_list
 			else
-				echo -e "\tNo good events in this event list."	
+				echo -e "\tNo good events in this eventlist. Deleting."	
 				rm "$gtid_eventlist"
 			fi  ## End of 'if there are good events in this eventlist'
 		else
 			echo -e "\tERROR: apply_gti.py did not work. GTI'd eventlist does not exist."
-			continue
 		fi  ## End of 'if gti'd eventlist exists, i.e. apply_gti worked.
 		
 	fi  ## End of 'if there are event files in this obsID directory'
