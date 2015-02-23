@@ -21,7 +21,7 @@ Written in Python 2.7.
 
 """
 
-###############################################################################
+################################################################################
 def dat_out(out_file, gti_file, event_list, good_time, good_chan, good_pcu):
 	"""
 			dat_out
@@ -48,7 +48,8 @@ def dat_out(out_file, gti_file, event_list, good_time, good_chan, good_pcu):
 	
 ## End of function 'dat_out'
 
-###############################################################################
+
+################################################################################
 def fits_out(out_file, gti_file, event_list, data_header, good_time, good_chan,\
 	good_pcu):
 	"""
@@ -99,7 +100,7 @@ def fits_out(out_file, gti_file, event_list, data_header, good_time, good_chan,\
 ## End of function 'fits_out'
 	
 
-###############################################################################
+################################################################################
 def main(event_list, gti_file, out_file):
 	"""
 			main
@@ -108,8 +109,8 @@ def main(event_list, gti_file, out_file):
 	
 	"""
 	
-	print "Event list:", event_list
-	print "GTI file:", gti_file
+# 	print "Event list:", event_list
+# 	print "GTI file:", gti_file
 
 	timezero = float(get_key_val(event_list, 0, 'TIMEZERO'))
 # 	assert int(get_key_val(gti_file, 1, 'PREFR')) == 0, \
@@ -212,7 +213,7 @@ def main(event_list, gti_file, out_file):
  ## End of function 'main'
 
 
-###############################################################################
+################################################################################
 if __name__ == "__main__":
 	
 	parser = argparse.ArgumentParser(usage='applygti.py eventlist gtifile \
@@ -235,4 +236,4 @@ write the GTI'd event list to.")
 
 ## End of program 'apply_gti_fits.py'
 
-###############################################################################
+################################################################################
