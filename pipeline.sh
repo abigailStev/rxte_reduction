@@ -32,21 +32,25 @@ list_dir="$home_dir/Dropbox/Lists"  ## A folder of lists; tells which files
 out_dir_prefix="$home_dir/Reduced_data"  ## Prefix of output directory
 # list_dir="$home_dir/Dropbox/Research/sample_data"
 # out_dir_prefix="$home_dir/Dropbox/Research/sample_data"
+
 # prefix="P70080"
 # prefix="j1808-2002"
 prefix="GX339-BQPO"
 # prefix="GX339-soft"
 # prefix="j1808-1HzQPO"
 # prefix="4U0614"
-datamode="E_125us_64M_0_1s"  ## 
-dt=16  ## Multiple of the time resolution of the data for ps and ccf
+# prefix="4u1636superburst"
+
+datamode="E_125us_64M_0_1s"
+
+dt=64  ## Multiple of the time resolution of the data for ps and ccf
 numsec=64  ## Length of segments in seconds of Fourier segments for analysis
 testing=0  ## 1 is yes, 0 is no
 
 day=$(date +%y%m%d)  # make the date a string and assign it to 'day'
-# day="150128"
-# day="150202"
-# day="150211"
+# day="150219"
+
+propID_list="$list_dir/${prefix}_propIDs.lst"
 
 # newfile_list="$list_dir/${prefix}_newfiles_1.lst"
 # obsID_list="$list_dir/${prefix}_obsIDs_1.lst"
@@ -105,7 +109,7 @@ echo -e "\n--- Download data ---"
 ################################################################################
 echo -e "\n--- Make list of files to be reduced ---"
 
-# echo time ./xtescan.sh "${prefix}" "$propID_list"
+# echo time ./xtescan.sh "${prefix}" "$obsID_list"
 # time "$script_dir"/xtescan.sh "${prefix}" "$propID_list"
 
 
@@ -174,10 +178,10 @@ cd "$ps_dir"
 echo -e "\n--- CCF ---"
 cd "$ccf_dir"
 
-echo time ./run_multi_CCF.sh "$event_list" "$prefix" "$dt" "$numsec" \
-	"$testing" "$day"
-time "$ccf_dir"/run_multi_CCF.sh "$event_list" "$prefix" "$dt" "$numsec" \
-	"$testing" "$day"
+# echo time ./run_multi_CCF.sh "$event_list" "$prefix" "$dt" "$numsec" \
+# 	"$testing" "$day"
+# time "$ccf_dir"/run_multi_CCF.sh "$event_list" "$prefix" "$dt" "$numsec" \
+# 	"$testing" "$day"
 
 
 ################################################################################
@@ -188,10 +192,8 @@ time "$ccf_dir"/run_multi_CCF.sh "$event_list" "$prefix" "$dt" "$numsec" \
 echo -e "\n--- Energy spectra ---"
 cd "$es_dir"
 
-# echo time ./run_energyspec.sh "$prefix" "$obsID_list" "$dt" "$numsec" \
-# 	"$testing" "$day"
-# time "$es_dir"/run_energyspec.sh "$prefix" "$obsID_list" "$dt" "$numsec" \
-# 	"$testing" "$day"
+echo time ./run_energyspec.sh "$prefix" "$dt" "$numsec" "$testing" "$day"
+time "$es_dir"/run_energyspec.sh "$prefix" "$dt" "$numsec" "$testing" "$day"
 
 
 ################################################################################
