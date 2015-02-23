@@ -5,7 +5,7 @@
 ## Extract and reduce RXTE PCA data.
 ##
 ## Example call: 
-## ./rxte_reduce_data.sh ./newfiles.lst ./obsIDs.lst ObjectName > run.log
+## ./rxte_reduce_data.sh ./newfiles.xdf ./obsIDs.lst ObjectName > run.log
 ## 
 ## Change the directory names and specifiers before the double '#' row to best
 ## suit your setup.
@@ -13,7 +13,7 @@
 ## run.log has the full print outs. The file progress.log is a more concise way
 ## to keep track of progress.
 ##
-## Notes: HEASOFT, bash 3.* and Python 2.7 (with supporting libraries) 
+## Notes: HEASOFT 6.11.*, bash 3.* and Python 2.7.* (with supporting libraries) 
 ## 		  must be installed in order to run this script. Internet access is 
 ##        required for most setups of CALDB.
 ##
@@ -24,15 +24,8 @@
 
 ## Make sure the input arguments are ok
 if (( $# != 3 )); then
-    echo -e "\t\tUsage: ./rxte_reduce_data.sh <newfiles.lst> <obsIDs.lst> <prefix>\n"
+    echo -e "\t\tUsage: ./rxte_reduce_data.sh <newfiles.xdf> <obsIDs.lst> <prefix>\n"
     exit
-fi
-
-################################################################################
-
-## If heainit isn't running, start it
-if (( $(echo $DYLD_LIBRARY_PATH | grep heasoft | wc -l) < 1 )); then
-	. $HEADAS/headas-init.sh
 fi
 
 newfilelist=$1  ## File with list of new files; with extension xdf, from xtescan
@@ -40,6 +33,13 @@ newfilelist=$1  ## File with list of new files; with extension xdf, from xtescan
 obsID_list=$2  ## File with list of obsIDs, to be written to
 prefix=$3  ## Prefix of directories and files (either proposal ID or object 
 		   ## nickname)
+		   
+################################################################################
+
+## If heainit isn't running, start it
+if (( $(echo $DYLD_LIBRARY_PATH | grep heasoft | wc -l) < 1 )); then
+	. $HEADAS/headas-init.sh
+fi
 
 home_dir=$(ls -d ~)  ## The home directory of this machine; the -d flag is 
 					 ## extremely important here
@@ -54,7 +54,6 @@ current_dir=$(pwd)  ## The current directory
 													## directory (for Aeolus)
 out_dir_prefix="$home_dir/Reduced_data"  ## Prefix of output directory
 ## out_dir is set to out_dir_prefix/prefix/obsID below in the big loop
-dump_file=dum.dat  ## Name of dumping file for intermediary steps
 progress_log="$current_dir/progress.log"  ## File with concise description of 
 										  ## this script's progress
 filter_list="$list_dir/tmp_all_filters.lst"  ## This gets changed later on
@@ -96,7 +95,7 @@ echo "Number of new files: $num_newfiles" | xargs
 
 for newfile in $( cat $newfilelist ); do
 	
-	echo "ObsID $current_file_num /$num_newfiles" | xargs >> $progress_log  
+	echo "New file $current_file_num /$num_newfiles" | xargs >> $progress_log  
 	## xargs trims the leading whitespace from $num_newfiles
 	obs_dir=$( dirname `dirname ${newfile}` )  ## Where the observation is stored
 	echo "obs_dir = $obs_dir"
@@ -162,7 +161,7 @@ for newfile in $( cat $newfilelist ); do
 	for std2file in $( ls "$obs_dir"/pca/FS4a* ); do 
 	
 		echo "std2file = $std2file"
-		echo "m = $m"
+# 		echo "m = $m"
 		new_std2="$out_dir/std2_${m}".pca
 		if [ ${std2file##*.} == gz ]; then  ## If it's gzipped
 			cp $std2file "$new_std2".gz
@@ -192,7 +191,7 @@ for newfile in $( cat $newfilelist ); do
 	for eventfile in $( ls "$obs_dir"/pca/"${mode_prefix}"* ); do  
 
 		echo "eventfile = $eventfile"
-		echo "m = $m"
+# 		echo "m = $m"
 		new_evt="$out_dir/evt_${m}".pca
 		
 		if [ ${eventfile##*.} == gz ]; then  ## If it's gzipped
@@ -206,8 +205,6 @@ for newfile in $( cat $newfilelist ); do
 	done  ## End for-loop through each event-mode file
 
 	gunzip -f "$out_dir"/*.gz
-					
-	if [ -e $dump_file ]; then rm -f $dump_file; fi
 	
 	
 	#############################################
@@ -215,14 +212,13 @@ for newfile in $( cat $newfilelist ); do
 	#############################################
 	
 # 	filtex="(PCU2_ON==1)&&(PCU0_ON==1)&&(elv>10)&&(offset<0.02)&&(VpX1LCntPcu2<=150)&&(VpX1RCntPcu2<=150)"  ## For saxj1808, to get rid of TBOs
-# 	filtex="(PCU2_ON==1)&&(PCU0_ON==1)&&(elv>10)&&(offset<0.02)"  ## For black holes
+# 	filtex="(PCU2_ON==1)&&(NUM_PCU_ON>=2)&&(elv>10)&&(offset<0.02)"  ## For black holes
 	filtex="(PCU2_ON==1)&&(elv>10)&&(offset<0.02)&&(NUM_PCU_ON>=2)"  ## For GX339 QPOs; don't 
 													## need to worry about time
 													## since saa as it's not a 
 													## very bright source
-# 	filtex="(PCU2_ON==1)&&(elv>10)&&(offset<0.02)&&(NUM_PCU_ON>=2)&&(VpX1LCntPcu2<=150)&&(VpX1RCntPcu2<=150)&&(TIME_SINCE_SAA>30)"  ## For j1808-1HzQPO
+# 	filtex="(PCU2_ON==1)&&(elv>10)&&(offset<0.02)&&(NUM_PCU_ON>=2)&&(VpX1LCntPcu2<=150)&&(VpX1RCntPcu2<=150)&&(TIME_SINCE_SAA>30)&&(ELECTRON2<0.1)"  ## For j1808-1HzQPO
 # 	filtex="(PCU2_ON==1)&&(PCU0_ON==1)&&(elv>10)&&(offset<0.02)&&(VpX1LCntPcu2>=100)&&(VpX1RCntPcu2>=100)"
-	## For j1808-1HzQPO, may want ELECTRON2 < 0.1
 	
 	"$script_dir"/gti_and_bkgd.sh "$out_dir" "$filtex" "$progress_log" "$evt_bkgd_list"
 
@@ -231,7 +227,7 @@ for newfile in $( cat $newfilelist ); do
 	## Built-in extraction of Standard-2f and event-mode data
 	##########################################################
  	
-	"$script_dir"/indiv_extract.sh "$out_dir" "$progress_log"
+# 	"$script_dir"/indiv_extract.sh "$out_dir" "$progress_log"
 
 
 	echo -e "Finished run for obsID=$obsID \n"				
@@ -244,6 +240,10 @@ done  ## End for-loop of each newfile in newfilelist
 
 echo -e "Finished individual obsIDs.\n"
 echo -e "Finished individual obsIDs.\n" >> $progress_log
+
+## Removing duplicates from the obsID list -- can happen if there are multiple
+## orbits per obsID
+python -c "from tools import no_duplicates; no_duplicates('$obsID_list')"
 
 ################################################################################
 ## Now making a filter, gti, event-mode spectrum, Std2 lightcurve and spectrum, 
@@ -264,7 +264,7 @@ fmerge infiles=@"$filters_ordered" \
 	outfile="$filter_file" \
 	columns=- \
 	copyprime=yes \
-	lastkey=TSTOP \
+	lastkey='TSTOP DATE-END TIME-END' \
 	clobber=yes
 
 if [ ! -e "$filter_file" ] ; then
@@ -289,8 +289,8 @@ elif (( bin_loc == 1 )); then
 	maketime infile=$filter_file outfile=$gti_file expr=$filtex name=NAME \
 		value=VALUE time=Time compact=no clobber=yes prefr=1.0 postfr=0.0
 else
-	echo "Warning: TIMEPIXR is neither 0 nor 1. Setting prefr=postfr=0.5."
-	echo "Warning: TIMEPIXR is neither 0 nor 1. Setting prefr=postfr=0.5." >> $progress_log
+	echo -e"\tWarning: TIMEPIXR is neither 0 nor 1. Setting prefr=postfr=0.5."
+	echo -e "\tWarning: TIMEPIXR is neither 0 nor 1. Setting prefr=postfr=0.5." >> $progress_log
 	maketime infile=$filter_file outfile=$gti_file expr=$filtex name=NAME \
 		value=VALUE time=Time compact=no clobber=yes prefr=0.5 postfr=0.5
 fi
@@ -301,17 +301,43 @@ if [ ! -e "$gti_file" ] ; then
 	exit
 fi
 
-########################################################
-## Make a mean event-mode spectrum -- needed for pcarsp
-########################################################
+################################################################################
+## Make a mean event-mode spectrum -- needed for pcarsp (in event_mode_bkgd.sh)
+################################################################################
 
 echo "Extracting MEAN evt spectrum"
 echo "Extracting MEAN evt spectrum" >> $progress_log
 all_evt="$out_dir/all_evt.pha"
-if (( $(wc -l < $se_list) == 0 )); then
-	echo -e "\tERROR: No event-mode data files. Cannot run seextrct."
-	echo -e "\tERROR: No event-mode data files. Cannot run seextrct." >> $progress_log
+
+## If there are no event files, give error and exit.
+if (( $( wc -l < $se_list ) == 0 )); then
+
+	echo -e "\tERROR: No event-mode data files. Cannot run seextrct. Exiting."
+	echo -e "\tERROR: No event-mode data files. Cannot run seextrct. Exiting." >> $progress_log
+	exit
+	
+## If there are 100 or more event files, need to add spectra in addpha.py
+elif (( $( wc -l < $se_list ) >= 100 )); then
+
+	echo "100 or more event spectra. Adding */event.pha with addpha."
+	echo "100 or more event spectra. Adding */event.pha with addpha." >> $progress_log
+	evtpha_list="$out_dir/${prefix}_evtpha.lst"
+	if [ -e "$evtpha_list" ]; then rm "$evtpha_list"; fi; touch "$evtpha_list"
+	
+	for obsid in $( cat $obsID_list ); do
+		echo "$out_dir/$obsid/event.pha" >> $evtpha_list
+	done	
+	
+	if (( $( wc -l < $evtpha_list ) > 0 )); then
+		echo python ./addpha.py "$evtpha_list" "$all_evt" "$gti_file"
+		python "$script_dir"/addpha.py "$evtpha_list" "$all_evt" "$gti_file"
+	else
+		echo -e "\tERROR: addpha.py did not run. No event spectra in list."
+	fi
+	
+## If there are 0 < n < 100 event files, combine them in seextrct	
 else
+
 	seextrct infile=@"$se_list" \
 		maxmiss=INDEF \
 		gtiorfile=- \
@@ -345,60 +371,58 @@ fi
 ## Make a mean standard-2 spectrum
 ###################################
 
-echo "Extracting MEAN std2 pcu 2 data"
-echo "Extracting MEAN std2 pcu 2 data" >> $progress_log
-all_std2="$out_dir/all_std2.pha"
-cp "$list_dir"/std2_pcu2_cols.lst ./tmp_std2_pcu2_cols.lst
-
-if (( $(wc -l < $sa_list) == 0 )); then
-	echo -e "\tERROR: No Standard-2 data files. Cannot run saextrct."
-	echo -e "\tERROR: No Standard-2 data files. Cannot run saextrct." >> $progress_log
-else
-	saextrct lcbinarray=10000000 \
-		maxmiss=200 \
-		infile=@"$sa_list" \
-		gtiorfile=- \
-		gtiandfile="$gti_file" \
-		outroot="${all_std2%.*}" \
-		columns=@tmp_std2_pcu2_cols.lst \
-		accumulate=ONE \
-		timecol="Time" \
-		binsz=16 \
-		mfracexp=INDEF \
-		printmode=BOTH \
-		lcmode=RATE \
-		spmode=SUM \
-		mlcinten=INDEF \
-		mspinten=INDEF \
-		writesum=- \
-		writemean=- \
-		timemin=INDEF \
-		timemax=INDEF \
-		timeint=INDEF \
-		chmin=INDEF \
-		chmax=INDEF \
-		chint=INDEF \
-		chbin=INDEF \
-		dryrun=no \
-		clobber=yes
-
-	if [ -e $dump_file ] ; then rm -f $dump_file; fi
-
-	if [ ! -e "${all_std2%.*}.lc" ] ; then
-		echo -e "\tERROR: Total Standard-2 light curve not made!"
-		echo -e "\tERROR: Total Standard-2 light curve not made!" >> $progress_log
-	fi  ## End 'if lightcurve not made', i.e. if saextrct failed
-	if [ ! -e "$all_std2" ] ; then
-		echo -e "\tERROR: Total Standard-2 spectrum not made!"
-		echo -e "\tERROR: Total Standard-2 spectrum not made!" >> $progress_log
-# 		exit
-	fi  ## End 'if spectrum not made', i.e. if saextrct failed
-fi  ## End 'if there are std2 files in $sa_list'
-
-echo "Done with total extractions."
-
-## Deleting the temporary file(s)
-rm tmp_std2_pcu2_cols.lst
+# echo "Extracting MEAN std2 pcu 2 data"
+# echo "Extracting MEAN std2 pcu 2 data" >> $progress_log
+# all_std2="$out_dir/all_std2.pha"
+# cp "$list_dir"/std2_pcu2_cols.lst ./tmp_std2_pcu2_cols.lst
+# 
+# if (( $(wc -l < $sa_list) == 0 )); then
+# 	echo -e "\tERROR: No Standard-2 data files. Cannot run saextrct."
+# 	echo -e "\tERROR: No Standard-2 data files. Cannot run saextrct." >> $progress_log
+# else
+# 	saextrct lcbinarray=10000000 \
+# 		maxmiss=200 \
+# 		infile=@"$sa_list" \
+# 		gtiorfile=- \
+# 		gtiandfile="$gti_file" \
+# 		outroot="${all_std2%.*}" \
+# 		columns=@tmp_std2_pcu2_cols.lst \
+# 		accumulate=ONE \
+# 		timecol="Time" \
+# 		binsz=16 \
+# 		mfracexp=INDEF \
+# 		printmode=BOTH \
+# 		lcmode=RATE \
+# 		spmode=SUM \
+# 		mlcinten=INDEF \
+# 		mspinten=INDEF \
+# 		writesum=- \
+# 		writemean=- \
+# 		timemin=INDEF \
+# 		timemax=INDEF \
+# 		timeint=INDEF \
+# 		chmin=INDEF \
+# 		chmax=INDEF \
+# 		chint=INDEF \
+# 		chbin=INDEF \
+# 		dryrun=no \
+# 		clobber=yes
+# 
+# 	if [ ! -e "${all_std2%.*}.lc" ] ; then
+# 		echo -e "\tERROR: Total Standard-2 light curve not made!"
+# 		echo -e "\tERROR: Total Standard-2 light curve not made!" >> $progress_log
+# 	fi  ## End 'if lightcurve not made', i.e. if saextrct failed
+# 	if [ ! -e "$all_std2" ] ; then
+# 		echo -e "\tERROR: Total Standard-2 spectrum not made!"
+# 		echo -e "\tERROR: Total Standard-2 spectrum not made!" >> $progress_log
+# # 		exit
+# 	fi  ## End 'if spectrum not made', i.e. if saextrct failed
+# fi  ## End 'if there are std2 files in $sa_list'
+# 
+# echo "Done with total extractions."
+# 
+# ## Deleting the temporary file(s)
+# rm tmp_std2_pcu2_cols.lst
 
 #######################################################
 ## Adding the extracted event-mode background spectra.
@@ -410,8 +434,8 @@ rm tmp_std2_pcu2_cols.lst
 ## Analyzing filter files to see how many PCUs are on
 ######################################################
 
-# "$script_dir"/analyze_filters.sh "$list_dir/${prefix}_propIDs.lst" "$prefix"
-# "$script_dir"/analyze_filters.sh "$obsID_list" "$prefix" >> $progress_log
+echo ./analyze_filters.sh "$obsID_list" "$prefix"
+"$script_dir"/analyze_filters.sh "$obsID_list" "$prefix"
 
 ################################################################################
 ## 					All done!
