@@ -121,6 +121,7 @@ for obsID in $( cat "$obsID_list" ); do
 			###############################################################
 			
 			if (( $naxis2 > 0 )); then
+				echo "$gtid_eventlist"
 				echo "$gtid_eventlist" >> $gtideventlist_list
 			else
 				echo -e "\tNo good events in this eventlist. Deleting."	
