@@ -7,14 +7,20 @@
 ## by energy channel, and making the response matrix for good measure (which
 ## also creates chan.txt, the file telling how to re-bin the energy channels).
 ## 
+## Example call: 
+##	./event_mode_bkgd.sh /out/put/dir bkgd_list.lst all_event.pha progress.log
+##
+## Change the directory names and specifiers before the double '#' row to best
+## suit your setup.
+##
+## Notes: HEASOFT 6.11.*, bash 3.*, and Python 2.7.* (with supporting libraries) 
+## 		  must be installed in order to run this script. 
+## 
 ## Written by Abigail Stevens, A.L.Stevens@uva.nl, 2014-2015 
 ## 
 ################################################################################
 
-########################################
 ## Make sure the input arguments are ok
-########################################
-
 if (( $# != 4 )); then
     echo -e "\t\tUsage: ./event_mode_bkgd.sh <output dir> <evt bkgd list> <total evt spectrum> <progress log>\n"
     exit
@@ -27,10 +33,7 @@ progress_log=$4
 
 ################################################################################
 
-######################################
 ## If heainit isn't running, start it
-######################################
-
 if (( $(echo $DYLD_LIBRARY_PATH | grep heasoft | wc -l) < 1 )); then
 	. $HEADAS/headas-init.sh
 fi
@@ -38,24 +41,29 @@ fi
 echo "Running event_mode_bkgd.sh"
 echo "Running event_mode_bkgd.sh" >> $progress_log
 
-################################################################################
-
-home_dir=$(ls -d ~)  # the -d flag is extremely important here
+home_dir=$(ls -d ~)
 list_dir="$home_dir/Dropbox/Lists"
 script_dir="$home_dir/Dropbox/Research/rxte_reduce"
 filter_file="$out_dir/all.xfl"
 gti_file="$out_dir/all.gti"
 ub_bkgd="$out_dir/evt_bkgd_notbinned"
 
+################################################################################
+################################################################################
+
 python -c "from tools import time_ordered_list; time_ordered_list('$bkgd_list')" > $out_dir/all_event_bkgd.lst
 cd "$out_dir"
 
-################################################################################
-################################################################################
+###################################################
+## Summing the event-mode-style background spectra
+###################################################
 
-
-python "$script_dir"/addpha.py "$out_dir/all_event_bkgd.lst" "$ub_bkgd.pha" "$gti_file"
-
+if (( $( wc -l < "$out_dir/all_event_bkgd.lst" ) > 0 )); then
+	echo python ./addpha.py "$out_dir/all_event_bkgd.lst" "$ub_bkgd.pha" "$gti_file"
+	python "$script_dir"/addpha.py "$out_dir/all_event_bkgd.lst" "$ub_bkgd.pha" "$gti_file"
+else
+	echo -e "\tERROR: addpha.py did not run. No event-mode background spectra in list."
+fi
 if [ ! -e "$ub_bkgd.pha" ]; then
 	echo -e "\tERROR: Adding the individual event-mode background spectra did not work."
 	echo -e "\tERROR: Adding the individual event-mode background spectra did not work." >> $progress_log
