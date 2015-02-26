@@ -35,17 +35,19 @@ out_dir_prefix="$home_dir/Reduced_data"  ## Prefix of output directory
 
 # prefix="P70080"
 # prefix="j1808-2002"
-# prefix="GX339-BQPO"
+prefix="GX339-BQPO"
 # prefix="GX339-soft"
 # prefix="j1808-1HzQPO"
 # prefix="4U0614"
-prefix="4u1636superburst"
+# prefix="4u1636superburst"
 
 datamode="E_125us_64M_0_1s"
 
-dt=1  ## Multiple of the time resolution of the data for ps and ccf
-numsec=256  ## Length of segments in seconds of Fourier segments for analysis
+dt=64  ## Multiple of the time resolution of the data for ps and ccf
+numsec=64  ## Length of segments in seconds of Fourier segments for analysis
+
 testing=0  ## 1 is yes, 0 is no
+filtering=0 ## 0 = no, 1 = yes; 0 is for QPOs, 1 is for coherent pulses
 
 day=$(date +%y%m%d)  # make the date a string and assign it to 'day'
 # day="150219"
@@ -164,10 +166,10 @@ cd "$script_dir"
 echo -e "\n--- Power spectrum ---"
 cd "$ps_dir"
 
-echo time ./run_multi_powerspec.sh "$event_list" "$prefix" "$dt" "$numsec" \
-	"$testing" "$day"
-time "$ps_dir"/run_multi_powerspec.sh "$event_list" "$prefix" "$dt" "$numsec" \
-	"$testing" "$day"
+# echo time ./run_multi_powerspec.sh "$event_list" "$prefix" "$dt" "$numsec" \
+# 	"$testing" "$day"
+# time "$ps_dir"/run_multi_powerspec.sh "$event_list" "$prefix" "$dt" "$numsec" \
+# 	"$testing" "$day"
 
 
 ################################################################################
@@ -179,9 +181,9 @@ echo -e "\n--- CCF ---"
 cd "$ccf_dir"
 
 echo time ./run_multi_CCF.sh "$event_list" "$prefix" "$dt" "$numsec" \
-	"$testing" "$day"
+	"$testing" "$day" "$filtering"
 time "$ccf_dir"/run_multi_CCF.sh "$event_list" "$prefix" "$dt" "$numsec" \
-	"$testing" "$day"
+	"$testing" "$day" "$filtering"
 
 
 ################################################################################
@@ -192,8 +194,8 @@ time "$ccf_dir"/run_multi_CCF.sh "$event_list" "$prefix" "$dt" "$numsec" \
 echo -e "\n--- Energy spectra ---"
 cd "$es_dir"
 
-echo time ./run_energyspec.sh "$prefix" "$dt" "$numsec" "$testing" "$day"
-time "$es_dir"/run_energyspec.sh "$prefix" "$dt" "$numsec" "$testing" "$day"
+# echo time ./run_energyspec.sh "$prefix" "$dt" "$numsec" "$testing" "$day"
+# time "$es_dir"/run_energyspec.sh "$prefix" "$dt" "$numsec" "$testing" "$day"
 
 
 ################################################################################
