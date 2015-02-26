@@ -22,7 +22,8 @@ Written in Python 2.7.
 """
 
 ################################################################################
-def dat_out(out_file, gti_file, event_list, good_time, good_chan, good_pcu):
+def dat_out(out_file, gti_file, event_list, detchans, good_time, good_chan, \
+	good_pcu):
 	"""
 			dat_out
 	
@@ -36,9 +37,10 @@ def dat_out(out_file, gti_file, event_list, good_time, good_chan, good_pcu):
 	out.write("# \tCreated in apply_gti.py")
 	out.write("\n# Decoded event list: %s" % event_list)
 	out.write("\n# GTI applied: %s" % gti_file)
+	out.write("\n# DETCHANS = %d" % detchans)
 	out.write("\n# ")
 	out.write("\n# Column 1: TIME (corrected with TIMEZERO)")
-	out.write("\n# Column 2: CHANNEL (0-63)")
+	out.write("\n# Column 2: CHANNEL (0-DETCHANS)")
 	out.write("\n# Column 3: PCUID (0-4)")
 	out.write("\n# \n")
 
@@ -50,8 +52,8 @@ def dat_out(out_file, gti_file, event_list, good_time, good_chan, good_pcu):
 
 
 ################################################################################
-def fits_out(out_file, gti_file, event_list, data_header, good_time, good_chan,\
-	good_pcu):
+def fits_out(out_file, gti_file, event_list, detchans, data_header, good_time, \
+	good_chan, good_pcu):
 	"""
 			fits_out
 	
@@ -71,7 +73,8 @@ def fits_out(out_file, gti_file, event_list, data_header, good_time, good_chan,\
 	prihdr.set('RAW_EVT', event_list, "Decoded event list")
 	prihdr.set('GTI_FILE', gti_file, "GTI file applied to decoded event list")
 	prihdr.set('NOTES', 1, "TIMEZERO applied to TIME in Column 1.")
-	prihdr.set('NOTES', 1, "")
+	prihdr.set('DETCHANS', detchans, "Total number of detector energy channels \
+available")
 	prihdu = fits.PrimaryHDU(header=prihdr)
 	
 	#####################
@@ -79,7 +82,8 @@ def fits_out(out_file, gti_file, event_list, data_header, good_time, good_chan,\
 	#####################
 	
 	col1 = fits.Column(name='TIME', unit='Hz', format='D', array=good_time)
-	col2 = fits.Column(name='CHANNEL', unit='0-63)', format='I', array=good_chan)
+	col2 = fits.Column(name='CHANNEL', unit='(0-DETCHANS)', format='I', \
+		array=good_chan)
 	col3 = fits.Column(name='PCUID', unit='(0-4)', format='I', array=good_pcu)
 	cols = fits.ColDefs([col1, col2, col3])
 	tbhdu = fits.BinTableHDU.from_columns(cols)
@@ -109,25 +113,45 @@ def main(event_list, gti_file, out_file):
 	
 	"""
 	
-# 	print "Event list:", event_list
-# 	print "GTI file:", gti_file
-
-	timezero = float(get_key_val(event_list, 0, 'TIMEZERO'))
-# 	assert int(get_key_val(gti_file, 1, 'PREFR')) == 0, \
-# 		"\tERROR: Current configuration of program requires PREFR = 0"
-# 	assert int(get_key_val(gti_file, 1, 'POSTFR')) == 1, \
-# 		"\tERROR: Current configuration of program requires POSTFR = 1"
+	#########################
+	## Opening the eventlist
+	#########################
 	
-	data_hdu = fits.open(event_list)
+	try:
+		data_hdu = fits.open(event_list)
+	except IOError:
+		print "\tERROR: File does not exist: %s" % event_list
+		exit()
+		
 	data_header = data_hdu[1].header	
 	data = data_hdu[1].data
 	orig_cols = data_hdu[1].columns
 	data_hdu.close()
 	
-	gti = 0
-
+	###########################################################
+	## Getting TIMEZERO the number of detector energy channels
+	###########################################################
+	
+	timezero = float(data_header['TIMEZERO'])
+	
+	if '64M' in data_header['DATAMODE'] and 'E_' in data_header['DATAMODE']:
+		detchans = 64
+	elif 'Standard' in data_header['DATAMODE']:
+		detchans = 129
+	else:
+		detchans = 256
+		
+	########################
+	## Opening the GTI file
+	########################
+	
 	if gti_file[-4:].lower() == ".gti":
-		gti_hdu = fits.open(gti_file)
+		try:
+			gti_hdu = fits.open(gti_file)
+		except IOError:
+			print "\tERROR: File does not exist: %s" % gti_file
+			exit()
+			
 		gti_header = gti_hdu[1].header	
 		gti = gti_hdu[1].data
 		gti_hdu.close()
@@ -148,7 +172,6 @@ def main(event_list, gti_file, out_file):
 	data_starttime = data_time[0]
 	data_stoptime = data_time[-1]
 
-	
 	#########################
 	## Filtering on GTI time
 	#########################
@@ -203,11 +226,16 @@ def main(event_list, gti_file, out_file):
 	##########
 	
 	if out_file[-4:].lower() == "fits":
-		fits_out(out_file, gti_file, event_list, data_header, good_time, \
-			good_chan, good_pcu)
+	
+		fits_out(out_file, gti_file, event_list, detchans, data_header, \
+			good_time, good_chan, good_pcu)
+			
 	elif out_file[-3:].lower() == "dat":
-		dat_out(out_file, gti_file, event_list, good_time, good_chan, good_pcu)
+	
+		dat_out(out_file, gti_file, event_list, detchans, good_time, good_chan,\
+			good_pcu)
 	else:
+	
 		raise Exception("ERROR: File type of GTI'd event list must be .dat or .fits.")
  
  ## End of function 'main'
