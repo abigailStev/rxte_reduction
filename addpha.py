@@ -48,25 +48,49 @@ added.")
 
     args = parser.parse_args()
     
-    ##########################
-    ## Initializing variables
-    ##########################
+    #####################
+    ## Setting things up
+    #####################
     
     ## Make list of file names from the list
     infiles = [line.strip() for line in open(args.file_list)]
     
+    ## To find the first file that exists
+    i=0
+    try:
+		while not os.path.isfile(infiles[i]): 
+			i += 1
+    except IndexError:
+		print "\tERROR: No input .pha files exist in %s. Exiting." % args.file_list
+		exit()
+    	
+    print " i = ", i
+    
+#     if i is len(infiles): 
+#     	print "\tERROR: No input .pha files exist in %s. Exiting." % args.file_list
+#     	exit()
+    
     ## Need to copy the first file and write over it -- this way it has all the
     ## header information needed by other FTOOLS. Relevant keywords are also 
     ## overwritten below.
-    subprocess.call(["cp", infiles[0], args.out_file])
+    subprocess.call(["cp", infiles[i], args.out_file])
     
     ## Get number of detector energy channels
-    detchans = tools.get_key_val(infiles[0], 1, "DETCHANS")  
+    detchans = tools.get_key_val(infiles[i], 1, "DETCHANS")  
+    
+    ##########################
+    ## Initializing variables
+    ##########################
     
     exposure = 0.0
     spectrum = np.zeros(detchans)
     sq_error = np.zeros(detchans)
     channels = np.arange(detchans)
+    tstop = 0
+    dateend = " "
+    timeend = " "
+    tstopi = 0
+    tstopf = 0
     
     ###########################################################################
     ## Looping through the spectra to sum the exposure time, counts, and error
@@ -82,26 +106,19 @@ added.")
     	exposure += float(file_hdu[1].header['EXPOSURE'])
     	spectrum += file_hdu[1].data.field('COUNTS')
     	sq_error += np.square(file_hdu[1].data.field('STAT_ERR'))
+    	
+    	if float(file_hdu[0].header['TSTOP']) > tstop:
+			tstop = float(file_hdu[0].header['TSTOP'])
+			dateend = file_hdu[0].header['DATE-END']
+			timeend = file_hdu[0].header['TIME-END']
+			tstopi = file_hdu[2].header['TSTOPI']
+			tstopf = file_hdu[2].header['TSTOPF']
+    	
     	file_hdu.close()
 		
 	## Done looping through fits files
 	
     error = np.sqrt(sq_error)  ## because adding in quadrature
-    
-
-    ## Getting header keyword values from the last file
-    try:
-    	lastfile = fits.open(infiles[-1])
-    except IOError:
-    	print "\tERROR: File does not exist: %s" % infiles[-1]
-    	exit()
-    	
-    tstop = lastfile[0].header['TSTOP']
-    dateend = lastfile[0].header['DATE-END']
-    timeend = lastfile[0].header['TIME-END']
-    tstopi = lastfile[2].header['TSTOPI']
-    tstopf = lastfile[2].header['TSTOPF']
-    lastfile.close()
 	
 	## Getting the GTI data from the gti file (to save to ext 2 of the output)
     try:
