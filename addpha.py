@@ -8,7 +8,7 @@ import subprocess
 import tools
 
 __author__ = "Abigail Stevens"
-__author_email__ = "A.L.Stevens@uva.nl"
+__author_email__ = "A.L.Stevens at uva.nl"
 __year__ = "2015"
 __description__ = "Adds multiple pha spectra together. Sums the exposure time \
 and counts. Error is summed in quadrature."
@@ -66,10 +66,6 @@ added.")
     	
     print " i = ", i
     
-#     if i is len(infiles): 
-#     	print "\tERROR: No input .pha files exist in %s. Exiting." % args.file_list
-#     	exit()
-    
     ## Need to copy the first file and write over it -- this way it has all the
     ## header information needed by other FTOOLS. Relevant keywords are also 
     ## overwritten below.
@@ -120,7 +116,11 @@ added.")
 	
     error = np.sqrt(sq_error)  ## because adding in quadrature
 	
-	## Getting the GTI data from the gti file (to save to ext 2 of the output)
+	##########################################
+	## Getting the GTI data from the gti file 
+	## (to save to ext 2 of the output)
+	##########################################
+	
     try:
     	gti_hdu = fits.open(args.gti_file)
     except IOError:
