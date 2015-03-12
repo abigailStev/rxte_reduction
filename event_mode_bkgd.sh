@@ -6,30 +6,31 @@
 ## event-mode background spectra from all the obsIDs in the list, re-binning it
 ## by energy channel, and making the response matrix for good measure (which
 ## also creates chan.txt, the file telling how to re-bin the energy channels).
-## 
-## Example call: 
-##	./event_mode_bkgd.sh /out/put/dir bkgd_list.lst all_event.pha progress.log
 ##
 ## Change the directory names and specifiers before the double '#' row to best
 ## suit your setup.
 ##
-## Notes: HEASOFT 6.11.*, bash 3.*, and Python 2.7.* (with supporting libraries) 
-## 		  must be installed in order to run this script. 
+## Notes: HEASOFT 6.14 (or higher), bash 3.*, and Python 2.7.* (with supporting
+##        libraries) must be installed in order to run this script. 
 ## 
-## Written by Abigail Stevens, A.L.Stevens@uva.nl, 2014-2015 
+## Written by Abigail Stevens, A.L.Stevens at uva.nl, 2014-2015 
 ## 
 ################################################################################
 
 ## Make sure the input arguments are ok
-if (( $# != 4 )); then
-    echo -e "\t\tUsage: ./event_mode_bkgd.sh <output dir> <evt bkgd list> <total evt spectrum> <progress log>\n"
+if (( $# != 6 )); then
+    echo -e "\t\tUsage: ./event_mode_bkgd.sh <script dir> <list dir> <out dir> \
+<evt bkgd list> <total evt spectrum> <progress log>\n"
     exit
 fi
 
-out_dir=$1
-bkgd_list=$2
-all_evt=$3
-progress_log=$4
+eventmodebkgd_args=( "$@" )
+script_dir="${eventmodebkgd_args[0]}"
+list_dir="${eventmodebkgd_args[1]}"
+out_dir="${eventmodebkgd_args[2]}"
+evt_bkgd_list="${eventmodebkgd_args[3]}"
+all_evt="${eventmodebkgd_args[4]}"
+progress_log="${eventmodebkgd_args[5]}"
 
 ################################################################################
 
@@ -41,17 +42,17 @@ fi
 echo "Running event_mode_bkgd.sh"
 echo "Running event_mode_bkgd.sh" >> $progress_log
 
-home_dir=$(ls -d ~)
-list_dir="$home_dir/Dropbox/Lists"
-script_dir="$home_dir/Dropbox/Research/rxte_reduce"
 filter_file="$out_dir/all.xfl"
 gti_file="$out_dir/all.gti"
 ub_bkgd="$out_dir/evt_bkgd_notbinned"
 
+echo "$evt_bkgd_list"
+
 ################################################################################
 ################################################################################
 
-python -c "from tools import time_ordered_list; time_ordered_list('$bkgd_list')" > $out_dir/all_event_bkgd.lst
+python -c "from tools import time_ordered_list; time_ordered_list('$evt_bkgd_list')" > ./dump.txt
+mv ./dump.txt "$evt_bkgd_list"
 cd "$out_dir"
 
 ###################################################
@@ -67,6 +68,7 @@ fi
 if [ ! -e "$ub_bkgd.pha" ]; then
 	echo -e "\tERROR: Adding the individual event-mode background spectra did not work."
 	echo -e "\tERROR: Adding the individual event-mode background spectra did not work." >> $progress_log
+	exit
 fi
 
 echo "Background spectrum: $ub_bkgd.pha"
@@ -111,9 +113,6 @@ fi
 
 ################################################################################
 ## All done!
-
-## Deleting temporary file(s)
-rm "$bkgd_list"
 
 echo "Finished running event_mode_bkgd.sh."
 echo "Finished running event_mode_bkgd.sh." >> $progress_log

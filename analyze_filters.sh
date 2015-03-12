@@ -4,42 +4,35 @@
 ## 
 ## Analyzes filter files from multiple obsIDs to show which pcus are on when.
 ## 
-## Written by Abigail Stevens, A.L.Stevens@uva.nl, 2015
+## Written by Abigail Stevens, A.L.Stevens at uva.nl, 2015
 ## 
 ################################################################################
 
-########################################
 ## Make sure the input arguments are ok
-########################################
-
-if (( $# != 2 )); then
-    echo -e "\t\tUsage: ./analyze_filters.sh <obs ID list> <filename prefix>\n"
+if (( $# != 5 )); then
+    echo -e "\t\tUsage: ./analyze_filters.sh <script dir> <list dir> <out dir> \
+<prefix> <obsID list>\n"
     exit
 fi
-obslist=$1
-prefix=$2
 
-# obslist="/Users/abigailstevens/Dropbox/Lists/GX339-BQPO_obsIDs.lst" 
-# prefix="GX339-BQPO"
+analyzefilters_args=( "$@" )
+script_dir="${analyzefilters_args[0]}"
+list_dir="${analyzefilters_args[1]}"
+out_dir="${analyzefilters_args[2]}"
+prefix="${analyzefilters_args[3]}"
+obsID_list="${analyzefilters_args[4]}"
 
 ################################################################################
 
-######################################
 ## If heainit isn't running, start it
-######################################
-
 if (( $(echo $DYLD_LIBRARY_PATH | grep heasoft | wc -l) < 1 )); then
 	. $HEADAS/headas-init.sh
 fi
 
-home_dir=$(ls -d ~)  ## The home directory of this machine
-list_dir="$home_dir/Dropbox/Lists"
-red_dir="$home_dir/Reduced_data/${prefix}"
-# red_dir="$home_dir/Dropbox/Research/sample_data"
-script_dir="$home_dir/Dropbox/Research/rxte_reduce"
-filter_tab="$red_dir/filters.dat"
+filter_tab="$out_dir/filters.dat"
+filter_list="${out_dir}/tmp_filters.txt"
+
 if [ -e "$filter_tab" ]; then rm "$filter_tab"; fi; touch "$filter_tab"
-filter_list="${red_dir}/tmp_filters.txt"
 if [ -e "$filter_list" ]; then rm "$filter_list"; fi; touch "$filter_list"
 
 ################################################################################
@@ -50,11 +43,11 @@ if [ -e "$filter_list" ]; then rm "$filter_list"; fi; touch "$filter_list"
 # 	IFS=',' read -a array <<< "$line"
 # 	propID="${array[1]}"
 # 	
-# 	obslist="$list_dir/${propID}_obsIDs.lst"
-# 	if [ ! -e "$obslist" ]; then
-# 		obslist="$list_dir/${propID}_dl_obsIDs.txt"
+# 	obsID_list="$list_dir/${propID}_obsIDs.lst"
+# 	if [ ! -e "$obsID_list" ]; then
+# 		obsID_list="$list_dir/${propID}_dl_obsIDs.txt"
 # 		
-# 		if [ ! -e "$obslist" ]; then 
+# 		if [ ! -e "$obsID_list" ]; then 
 # 			echo -e "\tERROR: obsID list not found for $propID."
 # 			continue
 # 		fi
@@ -64,19 +57,19 @@ if [ -e "$filter_list" ]; then rm "$filter_list"; fi; touch "$filter_list"
 	## Loop over all ObsIDs
 	########################
 	
-	for obsid in $( cat "$obslist" ) ; do
+	for obsID in $( cat "$obsID_list" ) ; do
 		
-		# if [ ! -d "$red_dir/$obsid" ]; then
-# 			echo -e "\tERROR: Reduced directory for $obsid does not exist."
+		# if [ ! -d "$out_dir/$obsID" ]; then
+# 			echo -e "\tERROR: Reduced directory for $obsID does not exist."
 # 			continue
 # 		fi
 # 		
-		filter_file="$red_dir/$obsid"/filter.xfl
-# 		filter_file="$home_dir/Dropbox/Research/sample_data/${obsid}_filter.xfl"
+		filter_file="$out_dir/$obsID"/filter.xfl
+# 		filter_file="$home_dir/Dropbox/Research/sample_data/${obsID}_filter.xfl"
 # 		echo "$filter_file"
 
 		if [ ! -e "$filter_file" ]; then
-			echo -e "\tERROR: Filter file for $obsid does not exist."
+			echo -e "\tERROR: Filter file for $obsID does not exist."
 			continue
 		fi
 		
@@ -89,11 +82,11 @@ if [ -e "$filter_list" ]; then rm "$filter_list"; fi; touch "$filter_list"
 ####################################################
 ## Run the python script pcu_filter.py to plot pcus
 ####################################################
-
-python "$script_dir"/pcu_filter.py "$filter_list" "$prefix" "$red_dir"
+echo python ./pcu_filter.py "$filter_list" "$prefix" "$out_dir"
+python "$script_dir"/pcu_filter.py "$filter_list" "$prefix" "$out_dir"
 		
-if [ -e "$red_dir/pcus_on.png" ]; then open "$red_dir/pcus_on.png"; fi
-# if [ -e "$red_dir/filter_info.txt" ]; then open "$red_dir/filter_info.txt"; fi
+if [ -e "$out_dir/pcus_on.png" ]; then open "$out_dir/pcus_on.png"; fi
+# if [ -e "$out_dir/filter_info.txt" ]; then open "$out_dir/filter_info.txt"; fi
 
 ## All done!
 ################################################################################

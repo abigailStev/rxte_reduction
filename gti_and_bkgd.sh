@@ -4,32 +4,34 @@
 ## 
 ## Make GTI file, background file, and extract background spectrum per obsID.
 ##
-## Inspired by G. Lamer (gl@astro.soton.ac.uk)'s script 'getgtibackxrb'
-##     or maybe Phil wrote the c-shell version, it's unclear.
-## 
-## Example call: 
-##	./gti_and_bkgd.sh /out/put/dir filterexpression progress.log evt_bkgd.lst
+## Notes: HEASOFT 6.14 (or higher), bash 3.*, and Python 2.7.* (with supporting
+##        libraries) must be installed in order to run this script. 
 ##
-## Change the directory names and specifiers before the double '#' row to best
-## suit your setup.
-##
-## Notes: HEASOFT 6.11.*, bash 3.*, and Python 2.7.* (with supporting libraries) 
-## 		  must be installed in order to run this script. 
-##
-## Abigail Stevens, A.L.Stevens@uva.nl, 2014-2015 
+## Inspired by/Based on G. Lamer and P. Uttley's tcsh script 'getgtibackxrb'
+## Written by Abigail Stevens, A.L.Stevens at uva.nl, 2014-2015 
 ## 
 ################################################################################
 
 ## Make sure the input arguments are ok
-if (( $# != 4 )); then
-    echo -e "\t\tUsage: ./gti_and_bkgd.sh <output dir> <filter expression> <progress log> <evt bkgd list>\n"
+if (( $# != 9 )); then
+    echo -e "\t\tUsage: ./gti_and_bkgd.sh \n"
     exit
 fi
 
-out_dir=$1
-filtex=$2
-progress_log=$3
-evt_bkgd_list=$4
+gtibkgd_args=( "$@" )
+echo "${gtibkgd_args[@]}"
+
+list_dir="${gtibkgd_args[0]}"
+script_dir="${gtibkgd_args[1]}"
+out_dir="${gtibkgd_args[2]}"
+progress_log="${gtibkgd_args[3]}"
+filtex="${gtibkgd_args[4]}"
+bkgd_model="${gtibkgd_args[5]}"
+saa_history="${gtibkgd_args[6]}"
+std2pcu2_cols="${gtibkgd_args[7]}"
+evt_bkgd_list="${gtibkgd_args[8]}"
+
+echo "$evt_bkgd_list"
 
 ################################################################################
 
@@ -40,9 +42,6 @@ fi
 
 filter_file="$out_dir/filter.xfl"
 gti_file="$out_dir/gti_file.gti"
-home_dir=$(ls -d ~) 
-list_dir="$home_dir/Dropbox/Lists"
-script_dir="$home_dir/Dropbox/Research/rxte_reduce"
 
 ################################################################################
 ################################################################################
@@ -55,9 +54,6 @@ echo "Now making GTI and background for std2 and event mode."
 
 if [ -e $gti_file ]; then rm $gti_file; fi
 
-bkgd_model="$list_dir/pca_bkgd_cmbrightvle_eMv20051128.mdl"  ## good for > 40 counts/sec/pcu
-# bkgd_model="$list_dir/pca_bkgd_cmfaintl7_eMv20051128.mdl"  ## good for < 40 counts/sec/pcu
-saa_history="$list_dir/pca_saa_history"
 
 bin_loc=$(python -c "from tools import get_key_val; print get_key_val('$filter_file', 0, 'TIMEPIXR')")
 echo "TIMEPIXR = $bin_loc"
@@ -86,7 +82,7 @@ fi
 ## because Standard-2 and event-mode backgrounds require different flags.
 ################################################################################
 
-cp "$list_dir"/std2_pcu2_cols.lst ./tmp_std2_pcu2_cols.lst
+cp "$std2pcu2_cols" ./tmp_std2_pcu2_cols.lst
 
 for std2_pca_file in $(ls $out_dir/"std2"*.pca); do
 	
@@ -97,11 +93,11 @@ for std2_pca_file in $(ls $out_dir/"std2"*.pca); do
 	## Standard-2 or Standard-1b data.
 	############################################################################
 	
-# 	echo "Making Standard-2 background."
-# 	echo "Making Standard-2 background." >> $progress_log
-# 	std2_bkgd=${std2_pca_file%.*}"_std2.bkgd"
-# 	echo "std2 bkgd file = $std2_bkgd"
-# 	
+	echo "Making Standard-2 background."
+	echo "Making Standard-2 background." >> $progress_log
+	std2_bkgd=${std2_pca_file%.*}"_std2.bkgd"
+	echo "std2 bkgd file = $std2_bkgd"
+	
 # 	if [ -e "$std2_pca_file" ] && [ -e "$bkgd_model" ] && \
 # 		[ -e "$filter_file" ] && [ -e "$saa_history" ]; then
 # 
@@ -159,7 +155,7 @@ for std2_pca_file in $(ls $out_dir/"std2"*.pca); do
 # 		echo -e "\tERROR: Standard-2 background file not made."
 # 		echo -e "\tERROR: Standard-2 background file not made." >> $progress_log
 # 	fi
-# 	
+	
 	############################################################################
 	## Event-mode background
 	##
@@ -258,7 +254,7 @@ done
 ## All done!
 
 ## Deleting the temp file(s)
-# if [ -e tmp_std2_pcu2_cols.lst ]; then rm tmp_std2_pcu2_cols.lst; fi
+if [ -e tmp_std2_pcu2_cols.lst ]; then rm tmp_std2_pcu2_cols.lst; fi
 
 echo "Finished making GTI and background."
 echo "Finished making GTI and background." >> $progress_log
