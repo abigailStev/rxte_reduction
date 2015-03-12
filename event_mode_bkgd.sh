@@ -7,9 +7,6 @@
 ## by energy channel, and making the response matrix for good measure (which
 ## also creates chan.txt, the file telling how to re-bin the energy channels).
 ##
-## Change the directory names and specifiers before the double '#' row to best
-## suit your setup.
-##
 ## Notes: HEASOFT 6.14 (or higher), bash 3.*, and Python 2.7.* (with supporting
 ##        libraries) must be installed in order to run this script. 
 ## 

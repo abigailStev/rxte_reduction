@@ -1,14 +1,22 @@
 #!/bin/bash
 
 ################################################################################
-
-
+##
+## Final data reduction steps for all observation files together.
+##
+## Notes: HEASOFT 6.14 (or higher), bash 3.* and Python 2.7.* (with supporting 
+##		  libraries) must be installed in order to run this script. Internet 
+##        access is required for most setups of CALDB.
+## 
+## Written by Abigail Stevens, A.L.Stevens at uva.nl, 2015
+## 
 ################################################################################
 
-if (( $# != 11 )); then
+if (( $# != 13 )); then
 	echo -e "\t\tUsage: ./reduce_alltogether.sh <list dir> <script dir> \
 <prefix> <progress log> <obsID list> <out dir prefix> <filter list> <filter \
-expression> <evt mode bkgd list> <se list> <sa list>"
+expression> <evt mode bkgd list> <se list> <sa list> <std2 pcu2 col list> \
+<bitmask file>"
 	exit
 fi
 
@@ -26,10 +34,29 @@ filtex="${alltogether_args[7]}"
 evt_bkgd_list="${alltogether_args[8]}"
 se_list="${alltogether_args[9]}"
 sa_list="${alltogether_args[10]}"
+std2pcu2_cols="${alltogether_args[11]}"
+bitfile="${alltogether_args[12]}"
+
+################################################################################
+
+## If heainit isn't running, start it
+if (( $(echo $DYLD_LIBRARY_PATH | grep heasoft | wc -l) < 1 )); then
+	. $HEADAS/headas-init.sh
+fi
+
+out_dir="$out_dir_prefix/${prefix}"
+filter_file="$out_dir/all.xfl"
+gti_file="$out_dir/all.gti"
+all_evt="$out_dir/all_evt.pha"
+all_std2="$out_dir/all_std2.pha"
+sa_cols="$out_dir/std2_cols.pcu"
+evtpha_list="$out_dir/${prefix}_evtpha.lst"  ## Only used if num_evt >= 100
 
 ################################################################################
 ################################################################################
 
+if [ -e "$evtpha_list" ]; then rm "$evtpha_list"; fi; touch "$evtpha_list"
+cat "$std2pcu2_cols" > "$sa_cols"
 
 ## Removing duplicates from the obsID list -- can happen if there are multiple
 ## orbits per obsID
@@ -40,10 +67,6 @@ python -c "from tools import no_duplicates; no_duplicates('$obsID_list')"
 ## adding event-mode background spectra, re-binning the total event-mode 
 ## background spectrum, and making a response matrix for ALL obsIDs. 
 ################################################################################
-
-out_dir="$out_dir_prefix/${prefix}"
-filter_file="$out_dir/all.xfl"
-gti_file="$out_dir/all.gti"
 
 echo "Merging filter files"
 
@@ -96,22 +119,19 @@ fi
 
 echo "Extracting MEAN evt spectrum"
 echo "Extracting MEAN evt spectrum" >> $progress_log
-all_evt="$out_dir/all_evt.pha"
 
-# ## If there are no event files, give error and exit.
-# if (( $( wc -l < $se_list ) == 0 )); then
-# 
-# 	echo -e "\tERROR: No event-mode data files for any obsID. Cannot run seextrct. Exiting."
-# 	echo -e "\tERROR: No event-mode data files for any obsID. Cannot run seextrct. Exiting." >> $progress_log
-# 	exit
-# 	
-# ## If there are 100 or more event files, need to add spectra in addpha.py
-# elif (( $( wc -l < $se_list ) >= 100 )); then
+## If there are no event files, give error and exit.
+if (( $( wc -l < $se_list ) == 0 )); then
+
+	echo -e "\tERROR: No event-mode data files for any obsID. Cannot run seextrct. Exiting."
+	echo -e "\tERROR: No event-mode data files for any obsID. Cannot run seextrct. Exiting." >> $progress_log
+	exit
+	
+## If there are 100 or more event files, need to add spectra in addpha.py
+elif (( $( wc -l < $se_list ) >= 100 )); then
 
 	echo "100 or more event spectra. Adding */event.pha with addpha."
 	echo "100 or more event spectra. Adding */event.pha with addpha." >> $progress_log
-	evtpha_list="$out_dir/${prefix}_evtpha.lst"
-	if [ -e "$evtpha_list" ]; then rm "$evtpha_list"; fi; touch "$evtpha_list"
 	
 	for obsid in $( cat $obsID_list ); do
 		echo "$out_dir/$obsid/event.pha" >> $evtpha_list
@@ -122,96 +142,90 @@ all_evt="$out_dir/all_evt.pha"
 		python "$script_dir"/addpha.py "$evtpha_list" "$all_evt" "$gti_file"
 	else
 		echo -e "\tERROR: addpha.py did not run. No event spectra in list."
+		echo -e "\tERROR: addpha.py did not run. No event spectra in list." >> $progress_log
 	fi
 	
 ## If there are 0 < n < 100 event files, combine them in seextrct	
-# else
-# 
-# 	seextrct infile=@"$se_list" \
-# 		maxmiss=INDEF \
-# 		gtiorfile=- \
-# 		gtiandfile="$gti_file" \
-# 		outroot="${all_evt%.*}" \
-# 		bitfile="$list_dir"/bitfile_evt_PCU2 \
-# 		timecol="TIME" \
-# 		columns="Event" \
-# 		multiple=yes \
-# 		binsz=1 \
-# 		printmode=SPECTRUM \
-# 		lcmode=RATE \
-# 		spmode=SUM \
-# 		timemin=INDEF \
-# 		timemax=INDEF \
-# 		timeint=INDEF \
-# 		chmin=INDEF \
-# 		chmax=INDEF \
-# 		chint=INDEF \
-# 		chbin=INDEF \
-# 		mode=ql
-# 
-# 	if [ ! -e "$all_evt" ] ; then
-# 		echo -e "\tERROR: Total event-mode spectrum not made!"
-# 		echo -e "\tERROR: Total event-mode spectrum not made!" >> $progress_log
-# 	# 	exit
-# 	fi  ## End 'if $all_evt not made', i.e. if seextrct failed
-# fi
+else
+	seextrct lcbinarray=1600000 \
+		maxmiss=INDEF \
+		infile=@"$se_list" \
+		gtiorfile=- \
+		gtiandfile="$gti_file" \
+		outroot="${all_evt%.*}" \
+		bitfile="$bitfile" \
+		timecol="TIME" \
+		columns="Event" \
+		multiple=yes \
+		binsz=1 \
+		printmode=SPECTRUM \
+		lcmode=RATE \
+		spmode=SUM \
+		timemin=INDEF \
+		timemax=INDEF \
+		timeint=INDEF \
+		chmin=INDEF \
+		chmax=INDEF \
+		chint=INDEF \
+		chbin=INDEF \
+		mode=ql
 
-###################################
-## Make a mean standard-2 spectrum
-###################################
+	if [ ! -e "$all_evt" ] ; then
+		echo -e "\tERROR: Total event-mode spectrum not made!"
+		echo -e "\tERROR: Total event-mode spectrum not made!" >> $progress_log
+	fi  
+fi  ## End of 'if there are evt files in $se_list
 
-# echo "Extracting MEAN std2 pcu 2 data"
-# echo "Extracting MEAN std2 pcu 2 data" >> $progress_log
-# all_std2="$out_dir/all_std2.pha"
-# cp "$list_dir"/std2_pcu2_cols.lst ./tmp_std2_pcu2_cols.lst
-# 
-# if (( $(wc -l < $sa_list) == 0 )); then
-# 	echo -e "\tERROR: No Standard-2 data files. Cannot run saextrct."
-# 	echo -e "\tERROR: No Standard-2 data files. Cannot run saextrct." >> $progress_log
-# else
-# 	saextrct lcbinarray=10000000 \
-# 		maxmiss=200 \
-# 		infile=@"$sa_list" \
-# 		gtiorfile=- \
-# 		gtiandfile="$gti_file" \
-# 		outroot="${all_std2%.*}" \
-# 		columns=@tmp_std2_pcu2_cols.lst \
-# 		accumulate=ONE \
-# 		timecol="Time" \
-# 		binsz=16 \
-# 		mfracexp=INDEF \
-# 		printmode=BOTH \
-# 		lcmode=RATE \
-# 		spmode=SUM \
-# 		mlcinten=INDEF \
-# 		mspinten=INDEF \
-# 		writesum=- \
-# 		writemean=- \
-# 		timemin=INDEF \
-# 		timemax=INDEF \
-# 		timeint=INDEF \
-# 		chmin=INDEF \
-# 		chmax=INDEF \
-# 		chint=INDEF \
-# 		chbin=INDEF \
-# 		dryrun=no \
-# 		clobber=yes
-# 
-# 	if [ ! -e "${all_std2%.*}.lc" ] ; then
-# 		echo -e "\tERROR: Total Standard-2 light curve not made!"
-# 		echo -e "\tERROR: Total Standard-2 light curve not made!" >> $progress_log
-# 	fi  ## End 'if lightcurve not made', i.e. if saextrct failed
-# 	if [ ! -e "$all_std2" ] ; then
-# 		echo -e "\tERROR: Total Standard-2 spectrum not made!"
-# 		echo -e "\tERROR: Total Standard-2 spectrum not made!" >> $progress_log
-# # 		exit
-# 	fi  ## End 'if spectrum not made', i.e. if saextrct failed
-# fi  ## End 'if there are std2 files in $sa_list'
-# 
+##################################################
+## Make a mean standard-2 spectrum and lightcurve
+##################################################
+
+echo "Extracting MEAN std2 pcu 2 data"
+echo "Extracting MEAN std2 pcu 2 data" >> $progress_log
+
+if (( $(wc -l < $sa_list) == 0 )); then
+	echo -e "\tERROR: No Standard-2 data files for any obsID. Cannot run saextrct."
+	echo -e "\tERROR: No Standard-2 data files for any obsID. Cannot run saextrct." >> $progress_log
+else
+	saextrct lcbinarray=10000000 \
+		maxmiss=200 \
+		infile=@"$sa_list" \
+		gtiorfile=- \
+		gtiandfile="$gti_file" \
+		outroot="${all_std2%.*}" \
+		columns=@"$sa_cols" \
+		accumulate=ONE \
+		timecol="Time" \
+		binsz=16 \
+		mfracexp=INDEF \
+		printmode=BOTH \
+		lcmode=RATE \
+		spmode=SUM \
+		mlcinten=INDEF \
+		mspinten=INDEF \
+		writesum=- \
+		writemean=- \
+		timemin=INDEF \
+		timemax=INDEF \
+		timeint=INDEF \
+		chmin=INDEF \
+		chmax=INDEF \
+		chint=INDEF \
+		chbin=INDEF \
+		dryrun=no \
+		clobber=yes
+
+	if [ ! -e "${all_std2%.*}.lc" ] ; then
+		echo -e "\tERROR: Total Standard-2 light curve not made!"
+		echo -e "\tERROR: Total Standard-2 light curve not made!" >> $progress_log
+	fi
+	if [ ! -e "$all_std2" ] ; then
+		echo -e "\tERROR: Total Standard-2 spectrum not made!"
+		echo -e "\tERROR: Total Standard-2 spectrum not made!" >> $progress_log
+	fi 
+fi  ## End 'if there are std2 files in $sa_list'
+
 echo "Done with total extractions."
-
-# ## Deleting the temporary file(s)
-# rm tmp_std2_pcu2_cols.lst
 
 #######################################################
 ## Adding the extracted event-mode background spectra.
@@ -225,7 +239,7 @@ eventmodebkgd_args[3]="$evt_bkgd_list"
 eventmodebkgd_args[4]="$all_evt"
 eventmodebkgd_args[5]="$progress_log"
 
-echo ./event_mode_bkgd.sh "${eventmodebkgd_args[@]}" 
+echo -e "\n" ./event_mode_bkgd.sh "${eventmodebkgd_args[@]} \n" 
 "$script_dir"/event_mode_bkgd.sh "${eventmodebkgd_args[@]}" 
 
 ######################################################
@@ -237,9 +251,9 @@ analyzefilters_args[0]="$script_dir"
 analyzefilters_args[1]="$list_dir"
 analyzefilters_args[2]="$out_dir"
 analyzefilters_args[3]="$prefix"
-analyzefilters_args[4]="$obsID_list"
+analyzefilters_args[4]="$filter_list"
 
-echo ./analyze_filters.sh "${analyzefilters_args[@]}"
+echo -e "\n" ./analyze_filters.sh "${analyzefilters_args[@]} \n"
 "$script_dir"/analyze_filters.sh "${analyzefilters_args[@]}"
 
 ################################################################################

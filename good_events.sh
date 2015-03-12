@@ -4,8 +4,21 @@
 ##
 ## Bash script that decodes the binary event list and runs apply_gti.py
 ##
+## If there are some events that don't have any good events in them, they are 
+## removed from lists and the user is instructed to run reduce_alltogether.sh 
+## again. The reduce_alltogether.sh call that was run before can be found in 
+## ./run.log. Note that I'm unsure how well this and rxte_reduce_data handle 
+## one orbit having good events and another one not.
 ##
+## WARNING: This script deletes a directory if that obsID has no good events
+## in it (~line 147). Uncomment the 'echo' line and comment the 'rm' line to 
+## check what will be deleted. Be sure it's ok to erase it!
+## 
+## Notes: HEASOFT 6.14 (or higher), bash 3.* and Python 2.7.* (with supporting 
+##		  libraries) must be installed in order to run this script.
+## 
 ## Written by Abigail Stevens, A.L.Stevens@uva.nl, 2014-2015
+## 
 ################################################################################
 
 ########################################
@@ -13,13 +26,16 @@
 ########################################
 
 if (( $# != 3 )); then
-    echo -e "\t\tUsage: ./good_events.sh <prefix> <obs ID list> <list of GTI'd event lists to write to>\n"
+    echo -e "\t\tUsage: ./good_events.sh <prefix> <obs ID list> <list of GTI'd \
+event lists to write to>\n"
     exit
 fi
 
-prefix=$1
-obsID_list=$2
-gtideventlist_list=$3
+goodevents_args=( "$@" )
+
+prefix="${goodevents_args[0]}"
+obsID_list="${goodevents_args[1]}"
+gtideventlist_list="${goodevents_args[2]}"
 
 ################################################################################
 
@@ -128,9 +144,10 @@ for obsID in $( cat "$obsID_list" ); do
 			else
 				echo -e "\tNo good events in eventlist for $obsID. Deleting."	
 				echo "$obsID" >> "$removed_obsIDs"
-# 				rm "$gtid_eventlist"
-# 				echo "$data_dir"
-				rm -rf "$data_dir"
+
+				echo "$data_dir"
+# 				rm -rf "$data_dir"
+
 			fi  ## End of 'if there are good events in this eventlist'
 		else
 			echo -e "\tERROR: apply_gti.py did not work. GTI'd eventlist does not exist."
@@ -140,8 +157,12 @@ for obsID in $( cat "$obsID_list" ); do
 	
 done  ## End of looping through obsIDs in obsID_list
 
-python -c "import tools; tools.remove_obsIDs('$obsID_list', '$removed_obsIDs')"
-open -a TextWrangler test.txt
+## If there were obsIDs that had no good events, remove it from the list.
+if (( $(wc -l < $removed_obsIDs) > 0 )); then
+	python -c "import tools; tools.remove_obsIDs('$obsID_list', '$removed_obsIDs')"
+	echo -e "\n\nNeed to re-run reduce_alltogether.sh. Check run.log for full \
+command.\n\n"
+fi
 
 ################################################################################
 ## All done!

@@ -19,10 +19,10 @@ def main(filter_list, prefix, data_dir):
 	## Initializations
 	###################
 	
-	tab_file = data_dir+"/filters.dat"
-	tab2_file = data_dir+"/filter_info.txt"
-	out_file1 = data_dir+"/obsID_pcus.png"
-	out_file2 = data_dir+"/pcus_on.png"
+	tab_file = data_dir+"/"+prefix+"_filters.dat"
+	tab2_file = data_dir+"/"+prefix+"_filter_info.txt"
+	out_file1 = data_dir+"/"+prefix+"_obsID_pcus.png"
+	out_file2 = data_dir+"/"+prefix+"_pcus_on.png"
 	filter_files = [line.strip() for line in open(filter_list)]
 	num = len(filter_files)
 	obsIDs = []

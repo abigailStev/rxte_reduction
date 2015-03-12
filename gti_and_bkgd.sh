@@ -13,25 +13,25 @@
 ################################################################################
 
 ## Make sure the input arguments are ok
-if (( $# != 9 )); then
+if (( $# != 11 )); then
     echo -e "\t\tUsage: ./gti_and_bkgd.sh \n"
     exit
 fi
 
 gtibkgd_args=( "$@" )
-echo "${gtibkgd_args[@]}"
+# echo "${gtibkgd_args[@]}"
 
 list_dir="${gtibkgd_args[0]}"
 script_dir="${gtibkgd_args[1]}"
 out_dir="${gtibkgd_args[2]}"
 progress_log="${gtibkgd_args[3]}"
-filtex="${gtibkgd_args[4]}"
-bkgd_model="${gtibkgd_args[5]}"
-saa_history="${gtibkgd_args[6]}"
-std2pcu2_cols="${gtibkgd_args[7]}"
-evt_bkgd_list="${gtibkgd_args[8]}"
-
-echo "$evt_bkgd_list"
+gti_file="${gtibkgd_args[4]}"
+filter_file="${gtibkgd_args[5]}"
+filtex="${gtibkgd_args[6]}"
+bkgd_model="${gtibkgd_args[7]}"
+saa_history="${gtibkgd_args[8]}"
+std2pcu2_cols="${gtibkgd_args[9]}"
+evt_bkgd_list="${gtibkgd_args[10]}"
 
 ################################################################################
 
@@ -40,20 +40,16 @@ if (( $(echo $DYLD_LIBRARY_PATH | grep heasoft | wc -l) < 1 )); then
 	. $HEADAS/headas-init.sh
 fi
 
-filter_file="$out_dir/filter.xfl"
-gti_file="$out_dir/gti_file.gti"
+################################################################################
+################################################################################
 
-################################################################################
-################################################################################
+if [ -e $gti_file ]; then rm $gti_file; fi
 
 #######################################
 ## Making the GTI from the filter file
 #######################################
 
 echo "Now making GTI and background for std2 and event mode."
-
-if [ -e $gti_file ]; then rm $gti_file; fi
-
 
 bin_loc=$(python -c "from tools import get_key_val; print get_key_val('$filter_file', 0, 'TIMEPIXR')")
 echo "TIMEPIXR = $bin_loc"
@@ -84,6 +80,7 @@ fi
 
 cp "$std2pcu2_cols" ./tmp_std2_pcu2_cols.lst
 
+m=1
 for std2_pca_file in $(ls $out_dir/"std2"*.pca); do
 	
 	############################################################################
@@ -98,108 +95,34 @@ for std2_pca_file in $(ls $out_dir/"std2"*.pca); do
 	std2_bkgd=${std2_pca_file%.*}"_std2.bkgd"
 	echo "std2 bkgd file = $std2_bkgd"
 	
-# 	if [ -e "$std2_pca_file" ] && [ -e "$bkgd_model" ] && \
-# 		[ -e "$filter_file" ] && [ -e "$saa_history" ]; then
-# 
-# 		pcabackest infile=$std2_pca_file \
-# 			outfile=$std2_bkgd \
-# 			modelfile=$bkgd_model \
-# 			filterfile=$filter_file \
-# 			layers=yes \
-# 			saahfile=$saa_history \
-# 			interval=16 \
-# 			gaincorr=no \
-# 			fullspec=no \
-# 			clobber=yes  	
-# 	fi
-# 	
-# 	if [ -e "$std2_bkgd" ]; then
-# 		
-# 		##########################################################
-# 		## Extract a spectrum from the Standard-2 background file
-# 		##########################################################
-# 		
-# 		saextrct lcbinarray=10000000 \
-# 			maxmiss=200 \
-# 			infile=$std2_bkgd \
-# 			gtiorfile=- \
-# 			gtiandfile="$gti_file" \
-# 			outroot="${std2_bkgd%.*}_bkgd" \
-# 			columns=@tmp_std2_pcu2_cols.lst \
-# 			accumulate=ONE \
-# 			timecol="Time" \
-# 			binsz=16 \
-# 			mfracexp=INDEF \
-# 			printmode=SPECTRUM \
-# 			lcmode=RATE \
-# 			spmode=SUM \
-# 			mlcinten=INDEF \
-# 			mspinten=INDEF \
-# 			writesum=- \
-# 			writemean=- \
-# 			timemin=INDEF \
-# 			timemax=INDEF \
-# 			timeint=INDEF \
-# 			chmin=INDEF \
-# 			chmax=INDEF \
-# 			chint=INDEF \
-# 			chbin=INDEF \
-# 			dryrun=no \
-# 			clobber=yes
-# 			
-# 		if [ ! -e "${std2_bkgd%.*}_bkgd.pha" ]; then
-# 			echo -e "\tERROR: Standard-2 background spectrum not extracted."
-# 			echo -e "\tERROR: Standard-2 background spectrum not extracted." >> $progress_log
-# 		fi
-# 	else
-# 		echo -e "\tERROR: Standard-2 background file not made."
-# 		echo -e "\tERROR: Standard-2 background file not made." >> $progress_log
-# 	fi
-	
-	############################################################################
-	## Event-mode background
-	##
-	## These bkgd files are made with the gain correction and full 256 channels,
-	## they should be used when data is not good xenon or standard 1 or 2
-	## Use this for event-mode data! Need to re-bin in energy channels once I've
-	## extracted a spectrum and summed all the spectra of the obsIDs being used.
-	############################################################################
-
-	echo "Making event-mode background."
-	echo "Making event-mode background." >> $progress_log
-	event_bkgd="${std2_pca_file%.*}_evt.bkgd"
-	echo "event bkgd file = $event_bkgd"
-
 	if [ -e "$std2_pca_file" ] && [ -e "$bkgd_model" ] && \
 		[ -e "$filter_file" ] && [ -e "$saa_history" ]; then
-		
+
 		pcabackest infile=$std2_pca_file \
-			outfile=$event_bkgd \
+			outfile=$std2_bkgd \
 			modelfile=$bkgd_model \
 			filterfile=$filter_file \
 			layers=yes \
 			saahfile=$saa_history \
 			interval=16 \
-			gaincorr=yes \
-			gcorrfile=caldb \
-			fullspec=yes \
-			clobber=yes
+			gaincorr=no \
+			fullspec=no \
+			clobber=yes  	
 	fi
 	
-	if [ -e "$event_bkgd" ]; then
-		echo "$event_bkgd"
+	if [ -e "$std2_bkgd" ]; then
 		
 		##########################################################
-		## Extract a spectrum from the event-mode background file
+		## Extract a spectrum from the Standard-2 background file
 		##########################################################
 		
 		saextrct lcbinarray=10000000 \
 			maxmiss=200 \
-			infile=$event_bkgd \
+			infile=$std2_bkgd \
 			gtiorfile=- \
 			gtiandfile="$gti_file" \
-			outroot="${event_bkgd%.*}_bkgd" \
-			columns=@tmp_std2_pcu2_cols.lst \
+			outroot="${std2_bkgd%.*}_bkgd" \
+			columns=@"$std2pcu2_cols" \
 			accumulate=ONE \
 			timecol="Time" \
 			binsz=16 \
@@ -220,17 +143,94 @@ for std2_pca_file in $(ls $out_dir/"std2"*.pca); do
 			chbin=INDEF \
 			dryrun=no \
 			clobber=yes
-
-		if [ ! -e "${event_bkgd%.*}_bkgd.pha" ]; then
-			echo -e "\tERROR: Event-mode background spectrum not extracted."
-			echo -e "\tERROR: Event-mode background spectrum not extracted." >> $progress_log
-		else
-			echo "${event_bkgd%.*}_bkgd.pha" >> $evt_bkgd_list
+			
+		if [ ! -e "${std2_bkgd%.*}_bkgd.pha" ]; then
+			echo -e "\tERROR: Standard-2 background spectrum not extracted."
+			echo -e "\tERROR: Standard-2 background spectrum not extracted." >> $progress_log
 		fi
 	else
-		echo -e "\tERROR: Event-mode background file not made."
-		echo -e "\tERROR: Event-mode background file not made." >> $progress_log
-# 		continue
+		echo -e "\tERROR: Standard-2 background file not made."
+		echo -e "\tERROR: Standard-2 background file not made." >> $progress_log
+	fi
+	
+	############################################################################
+	## Event-mode background
+	##
+	## These bkgd files are made with the gain correction and full 256 channels,
+	## they should be used when data is not good xenon or standard 1 or 2
+	## Use this for event-mode data! Need to re-bin in energy channels once I've
+	## extracted a spectrum and summed all the spectra of the obsIDs being used.
+	############################################################################
+
+	echo "Making event-mode background."
+	echo "Making event-mode background." >> $progress_log
+	event_bkgd="${std2_pca_file%.*}_evt.bkgd"
+	echo "event bkgd file = $event_bkgd"
+	
+	if [ -e "$out_dir/evt_${m}.pca" ]; then  ## Only process this bkgd if there's 
+											 ## an accompanying event-mode file
+		if [ -e "$std2_pca_file" ] && [ -e "$bkgd_model" ] && \
+			[ -e "$filter_file" ] && [ -e "$saa_history" ]; then
+		
+			pcabackest infile=$std2_pca_file \
+				outfile=$event_bkgd \
+				modelfile=$bkgd_model \
+				filterfile=$filter_file \
+				layers=yes \
+				saahfile=$saa_history \
+				interval=16 \
+				gaincorr=yes \
+				gcorrfile=caldb \
+				fullspec=yes \
+				clobber=yes
+		fi
+	
+		if [ -e "$event_bkgd" ]; then
+			echo "$event_bkgd"
+		
+			##########################################################
+			## Extract a spectrum from the event-mode background file
+			##########################################################
+		
+			saextrct lcbinarray=10000000 \
+				maxmiss=200 \
+				infile=$event_bkgd \
+				gtiorfile=- \
+				gtiandfile="$gti_file" \
+				outroot="${event_bkgd%.*}_bkgd" \
+				columns=@tmp_std2_pcu2_cols.lst \
+				accumulate=ONE \
+				timecol="Time" \
+				binsz=16 \
+				mfracexp=INDEF \
+				printmode=SPECTRUM \
+				lcmode=RATE \
+				spmode=SUM \
+				mlcinten=INDEF \
+				mspinten=INDEF \
+				writesum=- \
+				writemean=- \
+				timemin=INDEF \
+				timemax=INDEF \
+				timeint=INDEF \
+				chmin=INDEF \
+				chmax=INDEF \
+				chint=INDEF \
+				chbin=INDEF \
+				dryrun=no \
+				clobber=yes
+
+			if [ ! -e "${event_bkgd%.*}_bkgd.pha" ]; then
+				echo -e "\tERROR: Event-mode background spectrum not extracted."
+				echo -e "\tERROR: Event-mode background spectrum not extracted." >> $progress_log
+			else
+				echo "${event_bkgd%.*}_bkgd.pha" >> $evt_bkgd_list
+			fi
+		else
+			echo -e "\tERROR: Event-mode background file not made."
+			echo -e "\tERROR: Event-mode background file not made." >> $progress_log
+	# 		continue
+		fi
 	fi
 # 			
 # 		## Good Xenon bkgd files are made with the full 256 channels but no gain
@@ -247,7 +247,7 @@ for std2_pca_file in $(ls $out_dir/"std2"*.pca); do
 # 			gaincorr=no \
 # 			fullspec=yes \
 # 			clobber=yes  
-
+	(( m++ ))
 done
 
 ################################################################################
