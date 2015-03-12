@@ -27,7 +27,6 @@
 ##     18/04/2007 -- v1.1 -- added .xdf output files
 ##     17/05/2007 -- philv1.2 -- modified to use input obsid list
 ##	   02/02/2015 -- abbiev1.3 -- now in bash, flipped order of inputs
-##     05/02/2015 -- abbiev1.4 -- does list of propIDs
 ##     11/02/2015 -- abbiev1.5 -- uses xargs to trim leading whitespace from 
 ##								  number variables
 ################################################################################
@@ -39,8 +38,7 @@ if (( $# != 2 )); then
 fi
 
 prefix=$1   ## Prefix for files (either propID or object nickname)
-proplist=$2  ## List of propIDs for the observation(s)
-# obslist=$2  ## List of obsIDs for the files we want to use.
+obslist=$2  ## List of obsIDs for the files we want to use.
 
 home_dir=$(ls -d ~)  ## The home directory of this machine
 list_dir="$home_dir/Dropbox/Lists"
@@ -60,18 +58,24 @@ if [ -e $config_list ]; then rm -f $config_list; fi; touch $config_list
 ##############################
 ## Loop over all proposal IDs
 ##############################
-for line in $( cat "$proplist" ); do
-
-	IFS=',' read -a array <<< "$line"
-	propID="${array[1]}"
-	obslist="$list_dir/${propID}_dl_obsIDs.txt"
-	data_dir="$home_dir/Data/RXTE/$propID"
+# for line in $( cat "$proplist" ); do
+# 
+# 	IFS=',' read -a array <<< "$line"
+# 	propID="${array[1]}"
+# 	obslist="$list_dir/${propID}_dl_obsIDs.txt"
+# 	data_dir="$home_dir/Data/RXTE/$propID"
 	
 	########################
 	## Loop over all obsIDs
 	########################
 	
 	for obsid in $( cat "$obslist" ) ; do
+		
+		IFS='-' read -a array <<< "$obsid"
+		propID=$( echo P"${array[0]}" )
+		data_dir="$home_dir/Data/RXTE/$propID"
+
+# 		echo "$data_dir"
 		
 		if [ ! -d "$data_dir/$obsid" ]; then
 			echo -e "\tERROR: Data directory for $obsid does not exist."
@@ -152,7 +156,7 @@ for line in $( cat "$proplist" ); do
 	## End of loop over each ObsID
 	done
 ## End of loop over each proposal ID
-done
+# done
 echo ""
 
 ################################################################################
@@ -190,6 +194,6 @@ if [ -e timestart.txt ]; then rm -f timestart.txt; fi
 if [ -e datamode.txt ]; then rm -f datamode.txt; fi
 if [ -e config.txt ]; then rm -f config.txt; fi
 
-echo "Finished xte_scan.sh."
+echo "Finished xtescan.sh."
 
 ################################################################################
