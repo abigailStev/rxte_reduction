@@ -3,17 +3,18 @@
 ################################################################################
 ##
 ## Abbie's RXTE data reduction and analysis pipeline
-## Abigail Stevens, A.L.Stevens@uva.nl, 2014-2015
 ##
 ## To run, navigate to this directory on the command line, then: ./pipeline.sh
 ##
 ## Change the directory names and specifiers before the double '#' row to best
 ## suit your setup.
 ## 
-## Notes: HEASOFT, bash 3.* and Python 2.7 (with supporting libraries) 
-## 		  must be installed in order to run this script. Internet access is 
-##        required for most setups of CALDB.
+## Notes: HEASOFT 6.14 or higher, bash 3.* and Python 2.7 (with supporting 
+##        libraries) must be installed in order to run this script. Internet 
+##        access is required for most setups of CALDB.
 ##
+## Written by Abigail Stevens, A.L.Stevens at uva.nl, 2014-2015
+## 
 ################################################################################
 
 home_dir=$(ls -d ~)  ## Getting the name of the machine's home directory
@@ -50,9 +51,7 @@ testing=0  ## 1 is yes, 0 is no
 filtering=0 ## 0 = no, 1 = yes; 0 is for QPOs, 1 is for coherent pulses
 
 day=$(date +%y%m%d)  # make the date a string and assign it to 'day'
-# day="150219"
-
-propID_list="$list_dir/${prefix}_propIDs.lst"
+# day="150227"
 
 # newfile_list="$list_dir/${prefix}_newfiles_1.lst"
 # obsID_list="$list_dir/${prefix}_obsIDs_1.lst"
@@ -66,18 +65,18 @@ propID_list="$list_dir/${prefix}_propIDs.lst"
 # obsID_list="$list_dir/${prefix}_obsIDs.lst"
 # event_list="$list_dir/${prefix}_eventlists.lst"
 
-# newfile_list="$list_dir/${prefix}_${datamode}_1.xdf"
-# obsID_list="$list_dir/${prefix}_obsIDs_1.lst"
-# event_list="$list_dir/${prefix}_eventlists_1.lst"
+newfile_list="$list_dir/${prefix}_${datamode}_1.xdf"
+obsID_list="$list_dir/${prefix}_obsIDs_1.lst"
+event_list="$list_dir/${prefix}_eventlists_1.lst"
 # newfile_list="$list_dir/${prefix}_${datamode}_2.xdf"
 # obsID_list="$list_dir/${prefix}_obsIDs_2.lst"
 # event_list="$list_dir/${prefix}_eventlists_2.lst"
 # newfile_list="$list_dir/${prefix}_${datamode}_half.xdf"
 # obsID_list="$list_dir/${prefix}_obsIDs_half.lst"
 # event_list="$list_dir/${prefix}_eventlists_half.lst"
-newfile_list="$list_dir/${prefix}_${datamode}.xdf"
-obsID_list="$list_dir/${prefix}_obsIDs.lst"
-event_list="$list_dir/${prefix}_eventlists.lst"
+# newfile_list="$list_dir/${prefix}_${datamode}.xdf"
+# obsID_list="$list_dir/${prefix}_obsIDs.lst"
+# event_list="$list_dir/${prefix}_eventlists.lst"
 
 ################################################################################
 ################################################################################
@@ -112,7 +111,7 @@ echo -e "\n--- Download data ---"
 echo -e "\n--- Make list of files to be reduced ---"
 
 # echo time ./xtescan.sh "${prefix}" "$obsID_list"
-# time "$script_dir"/xtescan.sh "${prefix}" "$propID_list"
+# time "$script_dir"/xtescan.sh "${prefix}" "$obsID_list"
 
 
 ################################################################################
@@ -127,7 +126,7 @@ echo "$(pwd)/run.log"
 echo "$(pwd)/progress.log"
 ## The first line is good for debugging with only one obsID
 ## The second line is for long runs. 
-# time "$script_dir"/rxte_reduce_data.sh "$newfile_list" "$obsID_list" "${prefix}" 
+time "$script_dir"/rxte_reduce_data.sh "$newfile_list" "$obsID_list" "${prefix}" 
 # echo time ./rxte_reduce_data.sh "$newfile_list" "$obsID_list" "${prefix}" > run.log
 # time "$script_dir"/rxte_reduce_data.sh "$newfile_list" "$obsID_list" "${prefix}" > run.log
 
@@ -180,10 +179,10 @@ cd "$ps_dir"
 echo -e "\n--- CCF ---"
 cd "$ccf_dir"
 
-echo time ./run_multi_CCF.sh "$event_list" "$prefix" "$dt" "$numsec" \
-	"$testing" "$day" "$filtering"
-time "$ccf_dir"/run_multi_CCF.sh "$event_list" "$prefix" "$dt" "$numsec" \
-	"$testing" "$day" "$filtering"
+# echo time ./run_multi_CCF.sh "$event_list" "$prefix" "$dt" "$numsec" \
+# 	"$testing" "$day" "$filtering"
+# time "$ccf_dir"/run_multi_CCF.sh "$event_list" "$prefix" "$dt" "$numsec" \
+# 	"$testing" "$day" "$filtering"
 
 
 ################################################################################
