@@ -29,7 +29,7 @@ Example call: python addpha.py tmp_phas.txt ./tmp_out.pha tmp_all.gti
 if __name__ == "__main__":
 	
 	###############################
-	## Getting the input arguments
+	## Parsing the input arguments
 	###############################
 	
     parser = argparse.ArgumentParser(usage='addpha.py file_list outfile.pha \
@@ -52,10 +52,13 @@ added.")
     ## Setting things up
     #####################
     
+    if not os.path.isfile(args.file_list):
+    	raise Exception("ERROR: File list does not exist.")
+    	
     ## Make list of file names from the list
     infiles = [line.strip() for line in open(args.file_list)]
     
-    ## To find the first file that exists
+    ## Finding the first fits file that exists
     i=0
     try:
 		while not os.path.isfile(infiles[i]): 
