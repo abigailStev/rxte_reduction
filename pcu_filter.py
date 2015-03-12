@@ -8,6 +8,9 @@ import argparse
 
 """
 		pcu_filter.py
+
+Written in python 2.7.
+
 """
 ################################################################################
 def main(filter_list, prefix, data_dir):
@@ -55,7 +58,7 @@ def main(filter_list, prefix, data_dir):
 		obsID = file_hdu[0].header["OBS_ID"]
 		file_hdu.close()
 	
-		## Need to start at 1 instead of 0, since place 0 has val=255 (the null val)
+		## Need to start at 1 instead of 0, since [0]=255 (the null val)
 		time = data.field('TIME')[1:]
 		time = (time - time[0]) / 60
 		elv = data.field('ELV')[1:]
@@ -83,18 +86,18 @@ def main(filter_list, prefix, data_dir):
 		pcu4_avg = np.mean(pcu4)
 	
 	
-		ax1 = plt.subplot(3, 4, i)
-		ax1.plot(time, num_pcu, 'y-.', lw=4)
-		ax1.plot(time, pcu2, 'k', lw=1)
-		ax1.plot(time, pcu0, 'r--', lw=3)
-		ax1.plot(time, pcu1, 'b:', lw=3)
-		ax1.plot(time, pcu3, 'g--', lw=2)
-		ax1.plot(time, pcu4, 'm:', lw=2)
-		ax1.set_ylim(0, np.max(num_pcu)+0.25)
-		ax1.set_xlabel("Time (minutes)", fontproperties=font_prop)
-		ax1.tick_params(axis='x', labelsize=8)
-		ax1.tick_params(axis='y', labelsize=8)
-		ax1.set_title(obsID, fontsize=10)
+# 		ax1 = plt.subplot(3, 4, i)
+# 		ax1.plot(time, num_pcu, 'y-.', lw=4)
+# 		ax1.plot(time, pcu2, 'k', lw=1)
+# 		ax1.plot(time, pcu0, 'r--', lw=3)
+# 		ax1.plot(time, pcu1, 'b:', lw=3)
+# 		ax1.plot(time, pcu3, 'g--', lw=2)
+# 		ax1.plot(time, pcu4, 'm:', lw=2)
+# 		ax1.set_ylim(0, np.max(num_pcu)+0.25)
+# 		ax1.set_xlabel("Time (minutes)", fontproperties=font_prop)
+# 		ax1.tick_params(axis='x', labelsize=8)
+# 		ax1.tick_params(axis='y', labelsize=8)
+# 		ax1.set_title(obsID, fontsize=10)
 		i += 1
 
 		pcus_on = ""
@@ -126,13 +129,14 @@ def main(filter_list, prefix, data_dir):
 	
 	## End of for loop through filter files
 	
-	plt.tight_layout()
-	plt.savefig(out_file1, dpi=300)
-	# plt.show()
-	plt.close()
+# 	plt.tight_layout()
+# 	plt.savefig(out_file1, dpi=300)
+# 	# plt.show()
+# 	plt.close()
 
 	tmp = np.arange(num)+0.5
-	pcu_stack = np.column_stack((pcu0_on_array, pcu1_on_array, pcu2_on_array, pcu3_on_array, pcu4_on_array))
+	pcu_stack = np.column_stack((pcu0_on_array, pcu1_on_array, pcu2_on_array, \
+		pcu3_on_array, pcu4_on_array))
 	pcu_sums = np.sum(pcu_stack, axis=0)
 	pcus = np.arange(5)
 
@@ -169,8 +173,8 @@ def main(filter_list, prefix, data_dir):
 	fig, ax = plt.subplots(1,1,figsize=fs)
 	ax.plot(num_pcus_on_array, tmp, '*', ms=10)
 	ax.hlines(tmp, [0], num_pcus_on_array, linestyles='dotted', lw=3)
-	ax.set(xlim=(0,5.1), ylim=(0, np.max(tmp)+0.5), yticks=tmp, yticklabels=obsIDs, \
-		xlabel="Maximum number of PCUs on during obsID")
+	ax.set(xlim=(0,5.1), ylim=(0, np.max(tmp)+0.5), yticks=tmp, \
+		yticklabels=obsIDs, xlabel="Maximum number of PCUs on during obsID")
 	ax.tick_params(axis='y', labelsize=10)
 	fig.set_tight_layout(True)
 	plt.savefig(out_file2, dpi=200)
