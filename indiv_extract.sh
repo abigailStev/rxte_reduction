@@ -10,10 +10,10 @@
 ## Change the directory names and specifiers before the double '#' row to best
 ## suit your setup.
 ##
-## Notes: HEASOFT 6.11.*, bash 3.*, and Python 2.7.* (with supporting libraries) 
-## 		  must be installed in order to run this script. 
+## Notes: HEASOFT 6.14 (or higher), bash 3.*, and Python 2.7.* (with supporting
+##        libraries) must be installed in order to run this script. 
 ##
-## Written by Abigail Stevens, A.L.Stevens@uva.nl, 2015
+## Written by Abigail Stevens, A.L.Stevens at uva.nl, 2015
 ## 
 ################################################################################
 
@@ -47,48 +47,48 @@ cat "$list_dir"/std2_pcu2_cols.lst > "$sa_cols"
 ## Extracting Standard-2 data
 ##############################
 
-# if [ -e "$out_dir/std2.lst" ]; then rm -f "$out_dir/std2.lst"; fi
-# ls $out_dir/std2*.pca > "$out_dir/std2.lst"
-# echo "Extracting Std2 data" >> $progress_log
-# 
-# saextrct lcbinarray=10000000 \
-# 	maxmiss=200 \
-# 	infile=@"$out_dir/std2.lst" \
-# 	gtiorfile=- \
-# 	gtiandfile="$gti_file" \
-# 	outroot="$out_dir/std2" \
-# 	columns=@"$sa_cols" \
-# 	accumulate=ONE \
-# 	timecol=TIME \
-# 	binsz=16 \
-# 	mfracexp=INDEF \
-# 	printmode=BOTH \
-# 	lcmode=RATE \
-# 	spmode=SUM \
-# 	mlcinten=INDEF \
-# 	mspinten=INDEF \
-# 	writesum=- \
-# 	writemean=- \
-# 	timemin=INDEF \
-# 	timemax=INDEF \
-# 	timeint=INDEF \
-# 	chmin=INDEF \
-# 	chmax=INDEF \
-# 	chint=INDEF \
-# 	chbin=INDEF \
-# 	dryrun=no \
-# 	clobber=yes
-# 
-# if [ ! -e "$out_dir/std2.pha" ]; then
-# 	echo -e "\tERROR: Std2 spectrum not made!"
-# 	echo -e "\tERROR: Std2 spectrum not made!" >> $progress_log
-# # 	continue
-# fi 
-# if [ ! -e "$out_dir/std2.lc" ]; then
-# 	echo -e "\tERROR: Std2 light curve not made!"
-# 	echo -e "\tERROR: Std2 light curve not made!" >> $progress_log
-# # 	continue
-# fi
+if [ -e "$out_dir/std2.lst" ]; then rm -f "$out_dir/std2.lst"; fi
+ls $out_dir/std2*.pca > "$out_dir/std2.lst"
+echo "Extracting Std2 data" >> $progress_log
+
+saextrct lcbinarray=10000000 \
+	maxmiss=200 \
+	infile=@"$out_dir/std2.lst" \
+	gtiorfile=- \
+	gtiandfile="$gti_file" \
+	outroot="$out_dir/std2" \
+	columns=@"$sa_cols" \
+	accumulate=ONE \
+	timecol=TIME \
+	binsz=16 \
+	mfracexp=INDEF \
+	printmode=BOTH \
+	lcmode=RATE \
+	spmode=SUM \
+	mlcinten=INDEF \
+	mspinten=INDEF \
+	writesum=- \
+	writemean=- \
+	timemin=INDEF \
+	timemax=INDEF \
+	timeint=INDEF \
+	chmin=INDEF \
+	chmax=INDEF \
+	chint=INDEF \
+	chbin=INDEF \
+	dryrun=no \
+	clobber=yes
+
+if [ ! -e "$out_dir/std2.pha" ]; then
+	echo -e "\tERROR: Std2 spectrum not made!"
+	echo -e "\tERROR: Std2 spectrum not made!" >> $progress_log
+# 	continue
+fi 
+if [ ! -e "$out_dir/std2.lc" ]; then
+	echo -e "\tERROR: Std2 light curve not made!"
+	echo -e "\tERROR: Std2 light curve not made!" >> $progress_log
+# 	continue
+fi
 
 # ls $out_dir/vle*.pca > "$out_dir/vle.lst"
 # ## Get the VLE rates from std1b files
