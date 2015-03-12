@@ -34,9 +34,12 @@ fi
 home_dir=$(ls -d ~)
 exe_dir="$home_dir/Dropbox/Research/rxte_reduce"
 red_dir="$home_dir/Reduced_data/$prefix"
+list_dir="$home_dir/Dropbox/Lists"
 
+removed_obsIDs="$list_dir/$prefix_obsIDs_removed.lst"
 
 if [ -e "$gtideventlist_list" ]; then rm "$gtideventlist_list"; fi; touch "$gtideventlist_list"
+if [ -e "$removed_obsIDs" ]; then rm "$removed_obsIDs"; fi; touch "$removed_obsIDs"
 
 ################################################################################
 ################################################################################
@@ -123,8 +126,11 @@ for obsID in $( cat "$obsID_list" ); do
 			if (( $naxis2 > 0 )); then
 				echo "$gtid_eventlist" >> $gtideventlist_list
 			else
-				echo -e "\tNo good events in this eventlist. Deleting."	
-				rm "$gtid_eventlist"
+				echo -e "\tNo good events in eventlist for $obsID. Deleting."	
+				echo "$obsID" >> "$removed_obsIDs"
+# 				rm "$gtid_eventlist"
+# 				echo "$data_dir"
+				rm -rf "$data_dir"
 			fi  ## End of 'if there are good events in this eventlist'
 		else
 			echo -e "\tERROR: apply_gti.py did not work. GTI'd eventlist does not exist."
@@ -134,6 +140,8 @@ for obsID in $( cat "$obsID_list" ); do
 	
 done  ## End of looping through obsIDs in obsID_list
 
+python -c "import tools; tools.remove_obsIDs('$obsID_list', '$removed_obsIDs')"
+open -a TextWrangler test.txt
 
 ################################################################################
 ## All done!
