@@ -65,18 +65,18 @@ day=$(date +%y%m%d)  # make the date a string and assign it to 'day'
 # obsID_list="$list_dir/${prefix}_obsIDs.lst"
 # event_list="$list_dir/${prefix}_eventlists.lst"
 
-newfile_list="$list_dir/${prefix}_${datamode}_1.xdf"
-obsID_list="$list_dir/${prefix}_obsIDs_1.lst"
-event_list="$list_dir/${prefix}_eventlists_1.lst"
+# newfile_list="$list_dir/${prefix}_${datamode}_1.xdf"
+# obsID_list="$list_dir/${prefix}_obsIDs_1.lst"
+# event_list="$list_dir/${prefix}_eventlists_1.lst"
 # newfile_list="$list_dir/${prefix}_${datamode}_2.xdf"
 # obsID_list="$list_dir/${prefix}_obsIDs_2.lst"
 # event_list="$list_dir/${prefix}_eventlists_2.lst"
 # newfile_list="$list_dir/${prefix}_${datamode}_half.xdf"
 # obsID_list="$list_dir/${prefix}_obsIDs_half.lst"
 # event_list="$list_dir/${prefix}_eventlists_half.lst"
-# newfile_list="$list_dir/${prefix}_${datamode}.xdf"
-# obsID_list="$list_dir/${prefix}_obsIDs.lst"
-# event_list="$list_dir/${prefix}_eventlists.lst"
+newfile_list="$list_dir/${prefix}_${datamode}.xdf"
+obsID_list="$list_dir/${prefix}_obsIDs.lst"
+event_list="$list_dir/${prefix}_eventlists.lst"
 
 ################################################################################
 ################################################################################
@@ -153,8 +153,8 @@ cd "$script_dir"
 echo -e "\n--- Good event list ---"
 cd "$script_dir"
 
-# echo time ./good_events.sh "$prefix" "$obsID_list" "$event_list"
-# time "$script_dir"/good_events.sh "$prefix" "$obsID_list" "$event_list"
+echo time ./good_events.sh "$prefix" "$obsID_list" "$event_list"
+time "$script_dir"/good_events.sh "$prefix" "$obsID_list" "$event_list"
 
 
 ################################################################################
