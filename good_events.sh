@@ -52,10 +52,11 @@ exe_dir="$home_dir/Dropbox/Research/rxte_reduce"
 red_dir="$home_dir/Reduced_data/$prefix"
 list_dir="$home_dir/Dropbox/Lists"
 
-removed_obsIDs="$list_dir/$prefix_obsIDs_removed.lst"
+removed_obsIDs="$list_dir/${prefix}_obsIDs_removed.lst"
 
 if [ -e "$gtideventlist_list" ]; then rm "$gtideventlist_list"; fi; touch "$gtideventlist_list"
 if [ -e "$removed_obsIDs" ]; then rm "$removed_obsIDs"; fi; touch "$removed_obsIDs"
+echo "$removed_obsIDs"
 
 ################################################################################
 ################################################################################
@@ -108,14 +109,18 @@ for obsID in $( cat "$obsID_list" ); do
 		if (( num_files > 1 )); then
 			echo "Multiple orbits per obsID. Merging eventlists."
 			ls "$data_dir"/eventlist_*.fits > $orbits_list
+			
 			fmerge infiles=@"$orbits_list" \
 				outfile="$merged_eventlist" \
 				columns=- \
 				copyprime=yes \
-				lastkey='TSTOP DATE-END TIME-END'  \
+				lastkey='TSTOP DATE-END TIME-END' \
 				clobber=yes
-		else  ## If there's only one file, just copy it
-			cp "${eventlist}" "${merged_eventlist}"
+				
+			rm "$data_dir"/eventlist_*.fits
+			
+		else  ## If there's only one file, just rename it
+			mv "${eventlist}" "${merged_eventlist}"
 		fi
 
 		gtid_eventlist="$data_dir/GTId_eventlist.fits"
@@ -125,8 +130,9 @@ for obsID in $( cat "$obsID_list" ); do
 		## Run apply_gti.py
 		####################
 		
-		if [ -e "$eventlist" ] && [ -e "$gtifile" ]; then
+		if [ -e "${merged_eventlist}" ] && [ -e "$gtifile" ]; then
 			python "$exe_dir/apply_gti.py" "$merged_eventlist" "$gtifile" "$gtid_eventlist"
+			rm "${merged_eventlist}"
 		else
 			continue
 		fi
@@ -142,11 +148,10 @@ for obsID in $( cat "$obsID_list" ); do
 			if (( $naxis2 > 0 )); then
 				echo "$gtid_eventlist" >> $gtideventlist_list
 			else
-				echo -e "\tNo good events in eventlist for $obsID. Deleting."	
+				echo -e "\tNo good events in eventlist for $obsID. \n\tDeleting this directory: $data_dir"	
 				echo "$obsID" >> "$removed_obsIDs"
 
-				echo "$data_dir"
-# 				rm -rf "$data_dir"
+				rm -rf "$data_dir"
 
 			fi  ## End of 'if there are good events in this eventlist'
 		else
@@ -157,11 +162,27 @@ for obsID in $( cat "$obsID_list" ); do
 	
 done  ## End of looping through obsIDs in obsID_list
 
+# open "$removed_obsIDs"
 ## If there were obsIDs that had no good events, remove it from the list.
 if (( $(wc -l < $removed_obsIDs) > 0 )); then
-	python -c "import tools; tools.remove_obsIDs('$obsID_list', '$removed_obsIDs')"
-	echo -e "\n\nNeed to re-run reduce_alltogether.sh. Check run.log for full \
-command.\n\n"
+
+	filter_list="${red_dir}/all_filters.lst"
+	evt_bkgd_list="${red_dir}/all_event_bkgd.lst"
+	se_list="${red_dir}/all_evt.lst"
+	sa_list="${red_dir}/all_std2.lst"
+	
+	for element in $( cat "$removed_obsIDs" ); do
+# 		echo "$element"
+		awk "!/$element/" $obsID_list > dump.txt && mv dump.txt $obsID_list
+		awk "!/$element/" $filter_list > dump.txt && mv dump.txt $filter_list
+		awk "!/$element/" $evt_bkgd_list > dump.txt && mv dump.txt $evt_bkgd_list
+		awk "!/$element/" $se_list > dump.txt && mv dump.txt $se_list
+		awk "!/$element/" $sa_list > dump.txt && mv dump.txt $sa_list
+	done
+	
+	echo -e "\n\nNeed to re-run reduce_alltogether.sh. Check run.log and/or \
+progress.logfor full command.\n\n"
+
 fi
 
 ################################################################################
