@@ -71,8 +71,11 @@ python -c "from tools import no_duplicates; no_duplicates('$obsID_list')"
 echo "Merging filter files"
 
 ## Sort filter files from above chronologically
+echo "$filter_list"
 python -c "from tools import time_ordered_list; time_ordered_list('$filter_list')" > ./dump.txt
-mv ./dump.txt "$filter_list"
+echo ./dump.txt
+
+cp ./dump.txt "$filter_list"
 
 ## Merge the filter files into one big one
 fmerge infiles=@"$filter_list" \
@@ -258,4 +261,6 @@ echo -e "\n" ./analyze_filters.sh "${analyzefilters_args[@]} \n"
 
 ################################################################################
 ## 					All done!
+echo "Finished reduce_alltogether.sh"
+echo "Finished reduce_alltogether.sh" >> $progress_log
 ################################################################################

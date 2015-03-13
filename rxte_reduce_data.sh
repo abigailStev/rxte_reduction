@@ -68,7 +68,7 @@ out_dir_prefix="$home_dir/Reduced_data"  ## Prefix of output directory
 
 progress_log="$current_dir/progress.log"  ## File with concise description of 
 										  ## this script's progress
-filter_list="${out_dir_prefix}/${prefix}/all_filters.lst"  ## This gets changed later on
+filter_list="${out_dir_prefix}/${prefix}/all_filters.lst"
 evt_bkgd_list="${out_dir_prefix}/${prefix}/all_event_bkgd.lst"
 se_list="${out_dir_prefix}/${prefix}/all_evt.lst"
 sa_list="${out_dir_prefix}/${prefix}/all_std2.lst"
@@ -209,6 +209,7 @@ for newfile in $( cat $newfilelist ); do
 		
 		if [ ${std2file##*.} == gz ]; then  ## If it's gzipped
 			cp $std2file "$new_std2".gz
+			gunzip -f "$new_std2".gz
 		else  ## if it doesn't end in gz
 			cp $std2file "$new_std2"
 		fi
@@ -240,6 +241,7 @@ for newfile in $( cat $newfilelist ); do
 
 	if [ ${eventfile##*.} == gz ]; then  ## If it's gzipped
 		cp $eventfile "$new_evt".gz
+		gunzip -f "$new_evt".gz
 	else  ## if it doesn't end in gz
 		cp $eventfile "$new_evt"
 	fi
@@ -248,7 +250,6 @@ for newfile in $( cat $newfilelist ); do
 		echo "$new_evt" >> $se_list
 	fi
 	
-	gunzip -f "$out_dir/"*.gz
 	
 	#############################################
 	## Now making the GTI and background files.
@@ -261,13 +262,14 @@ for newfile in $( cat $newfilelist ); do
 	gtibkgd_args[3]="$progress_log"
 	gtibkgd_args[4]="$gti_file"
 	gtibkgd_args[5]="$filter_file"
-	gtibkgd_args[6]="$filtex"
+	gtibkgd_args[6]="'$filtex'"
 	gtibkgd_args[7]="$bkgd_model"
 	gtibkgd_args[8]="$saa_history"
 	gtibkgd_args[9]="$std2pcu2_cols"
 	gtibkgd_args[10]="$evt_bkgd_list"
 
 	echo ./gti_and_bkgd.sh "${gtibkgd_args[@]}"
+	gtibkgd_args[6]="$filtex"
 	"$script_dir"/gti_and_bkgd.sh "${gtibkgd_args[@]}"
 	
 	##########################################################
@@ -282,8 +284,8 @@ for newfile in $( cat $newfilelist ); do
 	indivextract_args[4]="$std2pcu2_cols"
 	indivextract_args[5]="$bitfile"
 	
- 	echo ./indiv_extract.sh "${indivextract_args[@]}"
-	"$script_dir"/indiv_extract.sh "${indivextract_args[@]}"
+#  	echo ./indiv_extract.sh "${indivextract_args[@]}"
+# 	"$script_dir"/indiv_extract.sh "${indivextract_args[@]}"
 
 	echo -e "Finished run for obsID=$obsID \n"				
 	echo -e "Finished run for obsID=$obsID \n" >> $progress_log
@@ -304,7 +306,7 @@ alltogether_args[3]="$progress_log"
 alltogether_args[4]="$obsID_list"
 alltogether_args[5]="$out_dir_prefix"
 alltogether_args[6]="$filter_list"
-alltogether_args[7]="$filtex"
+alltogether_args[7]="'$filtex'"  ## needs quotes for echo, but no quotes for the actual thing.
 alltogether_args[8]="$evt_bkgd_list"
 alltogether_args[9]="$se_list"
 alltogether_args[10]="$sa_list"
@@ -313,6 +315,7 @@ alltogether_args[12]="$bitfile"
 
 echo ./reduce_alltogether.sh "${alltogether_args[@]}"
 echo ./reduce_alltogether.sh "${alltogether_args[@]}" >> $progress_log
+alltogether_args[7]="$filtex"
 
 "$script_dir"/reduce_alltogether.sh "${alltogether_args[@]}" 
 

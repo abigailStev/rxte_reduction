@@ -36,9 +36,9 @@ out_dir_prefix="$home_dir/Reduced_data"  ## Prefix of output directory
 
 # prefix="P70080"
 # prefix="j1808-2002"
-prefix="GX339-BQPO"
+# prefix="GX339-BQPO"
 # prefix="GX339-soft"
-# prefix="j1808-1HzQPO"
+prefix="j1808-1HzQPO"
 # prefix="4U0614"
 # prefix="4u1636superburst"
 
@@ -126,9 +126,9 @@ echo "$(pwd)/run.log"
 echo "$(pwd)/progress.log"
 ## The first line is good for debugging with only one obsID
 ## The second line is for long runs. 
-time "$script_dir"/rxte_reduce_data.sh "$newfile_list" "$obsID_list" "${prefix}" 
-# echo time ./rxte_reduce_data.sh "$newfile_list" "$obsID_list" "${prefix}" > run.log
-# time "$script_dir"/rxte_reduce_data.sh "$newfile_list" "$obsID_list" "${prefix}" > run.log
+# time "$script_dir"/rxte_reduce_data.sh "$newfile_list" "$obsID_list" "${prefix}" 
+echo time ./rxte_reduce_data.sh "$newfile_list" "$obsID_list" "${prefix}" > run.log
+time "$script_dir"/rxte_reduce_data.sh "$newfile_list" "$obsID_list" "${prefix}" > run.log
 
 
 ################################################################################

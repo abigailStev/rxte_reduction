@@ -35,11 +35,10 @@ if (( $(echo $DYLD_LIBRARY_PATH | grep heasoft | wc -l) < 1 )); then
 	. $HEADAS/headas-init.sh
 fi
 
+std2_list="$out_dir/std2.lst"
+vle_list="$out_dir/vle.lst"
+evt_list="$out_dir/evt.lst"	
 sa_cols="$out_dir/std2_cols.pcu"
-cat "$std2pcu2_cols" > "$sa_cols"
-ls $out_dir/std2*.pca > "$out_dir/std2.lst"
-ls $out_dir/vle*.pca > "$out_dir/vle.lst"
-ls $out_dir/evt*.pca > "$out_dir/evt.lst"	
 
 ## If there are multiple event files per obsID with different mode prefixes,
 ## this program will overwrite it the next go-through, so it's all fine!
@@ -49,11 +48,16 @@ ls $out_dir/evt*.pca > "$out_dir/evt.lst"
 ################################################################################
 ################################################################################
 
+ls $out_dir/std2*.pca > $std2_list
+# ls $out_dir/vle*.pca > $vle_list
+ls $out_dir/evt*.pca > $evt_list
+cat "$std2pcu2_cols" > "$sa_cols"
+
 ##############################
 ## Extracting Standard-2 data
 ##############################
 
-if (( $(wc -l < "$out_dir/std2.lst") == 0 )); then
+if (( $( wc -l < "$std2_list" ) == 0 )); then
 	echo -e "\tERROR: No Standard-2 data files. Cannot run saextrct."
 	echo -e "\tERROR: No Standard-2 data files. Cannot run saextrct." >> $progress_log
 else
@@ -61,7 +65,7 @@ else
 
 	saextrct lcbinarray=10000000 \
 		maxmiss=200 \
-		infile=@"$out_dir/std2.lst" \
+		infile=@"$std2_list" \
 		gtiorfile=- \
 		gtiandfile="$gti_file" \
 		outroot="$out_dir/std2" \
@@ -102,13 +106,13 @@ else
 fi
 
 ## Get the VLE rates from std1b files
-# if (( $(wc -l < "$out_dir/vle.lst") == 0 )); then
+# if (( $( wc -l < "$vle_list" ) == 0 )); then
 # 	echo -e "\tERROR: No VLE data files. Cannot run saextrct."
 # 	echo -e "\tERROR: No VLE data files. Cannot run saextrct." >> $progress_log
 # else
 # 	saextrct lcbinarray=10000000 \
 # 		maxmiss=200 \
-# 		infile=@"$out_dir/vle.lst" \
+# 		infile=@"$vle_list" \
 # 		gtiorfile=- \
 # 		gtiandfile="$gti_file"  \
 # 		outroot="$out_dir/vle" \
@@ -149,7 +153,7 @@ fi
 ## Extracting event-mode data
 ##############################
 			
-if (( $(wc -l < "$out_dir/evt.lst") == 0 )); then
+if (( $( wc -l < "$evt_list" ) == 0 )); then
 	echo -e "\tERROR: No event-mode data files. Cannot run seextrct."
 	echo -e "\tERROR: No event-mode data files. Cannot run seextrct." >> $progress_log
 else
@@ -160,7 +164,7 @@ else
 	
 	seextrct lcbinarray=1600000 \
 		maxmiss=INDEF \
-		infile=@"$out_dir/evt.lst" \
+		infile=@"$evt_list" \
 		gtiorfile=- \
 		gtiandfile="$gti_file" \
 		outroot="$out_dir/event" \
