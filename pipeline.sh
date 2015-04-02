@@ -36,9 +36,9 @@ out_dir_prefix="$home_dir/Reduced_data"  ## Prefix of output directory
 
 # prefix="P70080"
 # prefix="j1808-2002"
-# prefix="GX339-BQPO"
+prefix="GX339-BQPO"
 # prefix="GX339-soft"
-prefix="j1808-1HzQPO"
+# prefix="j1808-1HzQPO"
 # prefix="4U0614"
 # prefix="4u1636superburst"
 
@@ -51,7 +51,7 @@ testing=0  ## 1 is yes, 0 is no
 filtering=0 ## 0 = no, 1 = yes; 0 is for QPOs, 1 is for coherent pulses
 
 day=$(date +%y%m%d)  # make the date a string and assign it to 'day'
-# day="150227"
+# day="150401"
 
 # newfile_list="$list_dir/${prefix}_newfiles_1.lst"
 # obsID_list="$list_dir/${prefix}_obsIDs_1.lst"
@@ -76,7 +76,7 @@ day=$(date +%y%m%d)  # make the date a string and assign it to 'day'
 # event_list="$list_dir/${prefix}_eventlists_half.lst"
 newfile_list="$list_dir/${prefix}_${datamode}.xdf"
 obsID_list="$list_dir/${prefix}_obsIDs.lst"
-event_list="$list_dir/${prefix}_eventlists.lst"
+event_list="$list_dir/${prefix}_eventlists_9.lst"
 
 ################################################################################
 ################################################################################
@@ -127,8 +127,8 @@ echo "$(pwd)/progress.log"
 ## The first line is good for debugging with only one obsID
 ## The second line is for long runs. 
 # time "$script_dir"/rxte_reduce_data.sh "$newfile_list" "$obsID_list" "${prefix}" 
-echo time ./rxte_reduce_data.sh "$newfile_list" "$obsID_list" "${prefix}" > run.log
-time "$script_dir"/rxte_reduce_data.sh "$newfile_list" "$obsID_list" "${prefix}" > run.log
+# echo time ./rxte_reduce_data.sh "$newfile_list" "$obsID_list" "${prefix}" > run.log
+# time "$script_dir"/rxte_reduce_data.sh "$newfile_list" "$obsID_list" "${prefix}" > run.log
 
 
 ################################################################################
@@ -153,8 +153,8 @@ cd "$script_dir"
 echo -e "\n--- Good event list ---"
 cd "$script_dir"
 
-echo time ./good_events.sh "$prefix" "$obsID_list" "$event_list"
-time "$script_dir"/good_events.sh "$prefix" "$obsID_list" "$event_list"
+# echo time ./good_events.sh "$prefix" "$obsID_list" "$event_list"
+# time "$script_dir"/good_events.sh "$prefix" "$obsID_list" "$event_list"
 
 
 ################################################################################
@@ -194,7 +194,7 @@ echo -e "\n--- Energy spectra ---"
 cd "$es_dir"
 
 # echo time ./run_energyspec.sh "$prefix" "$dt" "$numsec" "$testing" "$day"
-# time "$es_dir"/run_energyspec.sh "$prefix" "$dt" "$numsec" "$testing" "$day"
+time "$es_dir"/run_energyspec.sh "$prefix" "$dt" "$numsec" "$testing" "$day"
 
 
 ################################################################################
