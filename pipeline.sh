@@ -51,7 +51,7 @@ testing=0  ## 1 is yes, 0 is no
 filtering=0 ## 0 = no, 1 = yes; 0 is for QPOs, 1 is for coherent pulses
 
 day=$(date +%y%m%d)  # make the date a string and assign it to 'day'
-# day="150401"
+# day="150402"
 
 # newfile_list="$list_dir/${prefix}_newfiles_1.lst"
 # obsID_list="$list_dir/${prefix}_obsIDs_1.lst"
@@ -181,8 +181,8 @@ cd "$ccf_dir"
 
 # echo time ./run_multi_CCF.sh "$event_list" "$prefix" "$dt" "$numsec" \
 # 	"$testing" "$day" "$filtering"
-# time "$ccf_dir"/run_multi_CCF.sh "$event_list" "$prefix" "$dt" "$numsec" \
-# 	"$testing" "$day" "$filtering"
+time "$ccf_dir"/run_multi_CCF.sh "$event_list" "$prefix" "$dt" "$numsec" \
+	"$testing" "$day" "$filtering"
 
 
 ################################################################################
@@ -194,7 +194,7 @@ echo -e "\n--- Energy spectra ---"
 cd "$es_dir"
 
 # echo time ./run_energyspec.sh "$prefix" "$dt" "$numsec" "$testing" "$day"
-time "$es_dir"/run_energyspec.sh "$prefix" "$dt" "$numsec" "$testing" "$day"
+# time "$es_dir"/run_energyspec.sh "$prefix" "$dt" "$numsec" "$testing" "$day"
 
 
 ################################################################################
