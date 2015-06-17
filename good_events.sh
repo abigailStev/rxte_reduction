@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/bin/bash
 
 ################################################################################
 ##
@@ -17,7 +17,7 @@
 ## Notes: HEASOFT 6.14 (or higher), bash 3.* and Python 2.7.* (with supporting 
 ##		  libraries) must be installed in order to run this script.
 ## 
-## Written by Abigail Stevens, A.L.Stevens@uva.nl, 2014-2015
+## Written by Abigail Stevens, A.L.Stevens at uva.nl, 2014-2015
 ## 
 ################################################################################
 
@@ -26,8 +26,8 @@
 ########################################
 
 if (( $# != 3 )); then
-    echo -e "\t\tUsage: ./good_events.sh <prefix> <obs ID list> <list of GTI'd \
-event lists to write to>\n"
+    echo -e "\tUsage: ./good_events.sh <prefix> <obs ID list> <list of " \
+            "GTI'd event lists to write to>\n"
     exit
 fi
 
@@ -52,11 +52,11 @@ exe_dir="$home_dir/Dropbox/Research/rxte_reduce"
 red_dir="$home_dir/Reduced_data/$prefix"
 list_dir="$home_dir/Dropbox/Lists"
 
-removed_obsIDs="$list_dir/${prefix}_obsIDs_removed.lst"
+bad_orbits="$red_dir/bad_orbits.lst"  ## list of obsIDs with at leats one orbit with no good events
 
-if [ -e "$gtideventlist_list" ]; then rm "$gtideventlist_list"; fi; touch "$gtideventlist_list"
-if [ -e "$removed_obsIDs" ]; then rm "$removed_obsIDs"; fi; touch "$removed_obsIDs"
-echo "$removed_obsIDs"
+if [ -e "$gtideventlist_list" ]; then rm "$gtideventlist_list"; fi
+touch "$gtideventlist_list"
+if [ -e "$bad_orbits" ]; then rm "$bad_orbits"; fi; touch "$bad_orbits"
 
 ################################################################################
 ################################################################################
@@ -69,119 +69,103 @@ for obsID in $( cat "$obsID_list" ); do
 	data_dir="$red_dir/$obsID"
 	gtifile="$data_dir/gti_file.gti"
 	num_files=$( ls "$data_dir/evt"_*.pca | wc -l )
-	
+
 	####################################################
 	## If there are event files to decode in this obsID
 	####################################################
-	
+
 	if (( num_files > 0 )); then
-		
+
 		#######################################################
 		## Looping through the different event files per obsID
 		#######################################################
-		
+
 		for (( num=1;num<=num_files;++num )); do
-		
+
 			binaryfile="$data_dir/evt_${num}.pca"
 			eventlist="$data_dir/eventlist_${num}.fits"
 			if [ -e "$eventlist" ]; then rm "$eventlist"; fi
-		
+
 			##################################
 			## 'Decode' the binary event list
 			##################################
-		
+
 			if [ -e "$binaryfile" ]; then
 				decodeevt infile="$binaryfile" outfile="$eventlist" > dump.txt
 			else
 				echo -e "\tBinary file not decoded; does not exist."
 				continue
 			fi
-			
+
+			gtid_eventlist="$data_dir/GTId_eventlist_${num}.fits"
+
+			####################
+            ## Run apply_gti.py
+            ####################
+
+            if [ -e "${eventlist}" ] && [ -e "$gtifile" ]; then
+                python "$exe_dir/apply_gti.py" "${eventlist}" "$gtifile" \
+                        "$gtid_eventlist"
+#                rm "${eventlist}"
+            else
+                continue
+            fi
+
+            if [ -e "$gtid_eventlist" ]; then
+                naxis2=$( python -c "from tools import get_key_val; print get_key_val('$gtid_eventlist', 1, 'NAXIS2')" )
+
+                ###############################################################
+                ## Only append the GTI'd eventlist file name to the list if it
+                ## has good events in it (i.e. length > 0)
+                ###############################################################
+
+                if (( $naxis2 > 0 )); then
+                    echo "$gtid_eventlist" >> $gtideventlist_list
+                    echo "$obsID" >> "$bad_orbits"
+                else
+                    echo -e "\tNo good events in eventlist for $obsID orbit ${num}."
+                    rm "$binaryfile"
+                    echo "$obsID" >> "$bad_orbits"
+                fi  ## End of 'if there are good events in this eventlist'
+            else
+                echo -e "\tERROR: apply_gti.py did not work. GTI'd eventlist "\
+                        "does not exist."
+            fi  ## End of 'if gti'd eventlist exists, i.e. apply_gti worked.
 		done  ## End of looping through the eventlists in this obsID
-		
-		##################################################################
-		## Merging multiple orbits from one obsID into a single eventlist
-		##################################################################
-		
-		merged_eventlist="$data_dir/eventlist.fits"
-		orbits_list="${data_dir}/multi_evts.lst"
-		
-		if (( num_files > 1 )); then
-			echo "Multiple orbits per obsID. Merging eventlists."
-			ls "$data_dir"/eventlist_*.fits > $orbits_list
-			
-			fmerge infiles=@"$orbits_list" \
-				outfile="$merged_eventlist" \
-				columns=- \
-				copyprime=yes \
-				lastkey='TSTOP DATE-END TIME-END' \
-				clobber=yes
-				
-			rm "$data_dir"/eventlist_*.fits
-			
-		else  ## If there's only one file, just rename it
-			mv "${eventlist}" "${merged_eventlist}"
-		fi
 
-		gtid_eventlist="$data_dir/GTId_eventlist.fits"
-	# 	gtid_eventlist="$data_dir/GTId_eventlist.dat"
-	
-		####################
-		## Run apply_gti.py
-		####################
-		
-		if [ -e "${merged_eventlist}" ] && [ -e "$gtifile" ]; then
-			python "$exe_dir/apply_gti.py" "$merged_eventlist" "$gtifile" "$gtid_eventlist"
-			rm "${merged_eventlist}"
-		else
-			continue
-		fi
-
-		if [ -e "$gtid_eventlist" ]; then
-			naxis2=$( python -c "from tools import get_key_val; print get_key_val('$gtid_eventlist', 1, 'NAXIS2')" )
-			
-			###############################################################
-			## Only append the GTI'd eventlist file name to the list if it 
-			## has good events in it (i.e. length > 0)
-			###############################################################
-			
-			if (( $naxis2 > 0 )); then
-				echo "$gtid_eventlist" >> $gtideventlist_list
-			else
-				echo -e "\tNo good events in eventlist for $obsID. \n\tDeleting this directory: $data_dir"	
-				echo "$obsID" >> "$removed_obsIDs"
-
-				rm -rf "$data_dir"
-
-			fi  ## End of 'if there are good events in this eventlist'
-		else
-			echo -e "\tERROR: apply_gti.py did not work. GTI'd eventlist does not exist."
-		fi  ## End of 'if gti'd eventlist exists, i.e. apply_gti worked.
-		
 	fi  ## End of 'if there are event files in this obsID directory'
-	
+
 done  ## End of looping through obsIDs in obsID_list
 
-# open "$removed_obsIDs"
-## If there were obsIDs that had no good events, remove it from the list.
-if (( $(wc -l < $removed_obsIDs) > 0 )); then
+## If there were obsIDs that had orbits no good events, check if no good orbits
+if (( $( wc -l < $bad_orbits ) > 0 )); then
+    python -c "from tools import no_duplicates; no_duplicates('$bad_orbits')"
 
-	filter_list="${red_dir}/all_filters.lst"
-	evt_bkgd_list="${red_dir}/all_event_bkgd.lst"
-	se_list="${red_dir}/all_evt.lst"
-	sa_list="${red_dir}/all_std2.lst"
-	
-	for element in $( cat "$removed_obsIDs" ); do
-# 		echo "$element"
-		awk "!/$element/" $obsID_list > dump.txt && mv dump.txt $obsID_list
-		awk "!/$element/" $filter_list > dump.txt && mv dump.txt $filter_list
-		awk "!/$element/" $evt_bkgd_list > dump.txt && mv dump.txt $evt_bkgd_list
-		awk "!/$element/" $se_list > dump.txt && mv dump.txt $se_list
-		awk "!/$element/" $sa_list > dump.txt && mv dump.txt $sa_list
-	done
-	
-	echo -e "\n\nNeed to re-run reduce_alltogether.sh. Check run.log and/or \
-progress.logfor full command.\n\n"
+    for obsID in $( cat "$bad_orbits" ); do
+
+        cd "$red_dir/$obsID"
+        ## If there were no good orbits in an obsID, delete it
+        if (( $(ls -1 GTId_eventlist* | cat | wc -l) == 0 )); then
+
+            cd ..
+            echo "No good orbits for $obsID. Deleting."
+            rm -rf "$red_dir/$obsID"
+
+            filter_list="${red_dir}/all_filters.lst"
+            evt_bkgd_list="${red_dir}/all_event_bkgd.lst"
+            se_list="${red_dir}/all_evt.lst"
+            sa_list="${red_dir}/all_std2.lst"
+
+            awk "!/$obsID/" $obsID_list > dump.txt && mv dump.txt $obsID_list
+            awk "!/$obsID/" $filter_list > dump.txt && mv dump.txt $filter_list
+            awk "!/$obsID/" $evt_bkgd_list > dump.txt && mv dump.txt $evt_bkgd_list
+            awk "!/$obsID/" $se_list > dump.txt && mv dump.txt $se_list
+            awk "!/$obsID/" $sa_list > dump.txt && mv dump.txt $sa_list
+
+            echo -e "\n\nNeed to re-run reduce_alltogether.sh. Check run.log "\
+                    "and/or progress.log for full command.\n\n"
+        fi
+    done
 
 fi
 
