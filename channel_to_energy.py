@@ -14,7 +14,7 @@ detector mode energy channel.
 Use this for plotting 2D CCF and lag-energy spectra vs energy in keV instead of
 vs detector mode energy channel.
 
-Abigail Stevens, A.L.Stevens at uva.nl, 2015
+2015
 
 """
 

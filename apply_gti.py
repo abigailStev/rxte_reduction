@@ -5,6 +5,7 @@ import itertools
 import os
 
 __author__ = "Abigail Stevens, A.L.Stevens at uva.nl"
+__version__ = "0.2 2015-06-17"
 
 """
 Applies a GTI to an RXTE decoded event list, to filter out events in bad times.
@@ -12,7 +13,7 @@ This code assumes that the GTI times have not been previously corrected with
 TIMEZERO, but does assume the start time is at the front of the first time bin
 and the end time is at the end of the last time bin.
 
-Abigail Stevens, A.L.Stevens at uva.nl, 2014-2015
+2014-2015
 
 """
 
