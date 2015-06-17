@@ -18,38 +18,90 @@ Abigail Stevens, A.L.Stevens at uva.nl, 2014-2015
 
 ################################################################################
 def dat_out(out_file, gti_file, event_list, detchans, good_time, good_chan, \
-    good_pcu):
+        good_pcu):
     """
-    Writes good events to a dat output file.
+    Writes good events to a .dat output file.
 
+    Parameters
+    ----------
+    out_file : str
+        Filename of the .dat output file to write the good events to.
+
+    gti_file : str
+        Filename of the GTI (good times interval) file.
+
+    event_list : str
+        Filename of the unfiltered event list.
+
+    detchans : int
+        Number of energy channels for the detector mode.
+
+    good_time : np.array of floats
+        Times for good events.
+
+    good_chan : np.array of ints
+        Detector mode energy channels for good events.
+
+    good_pcu : np.array of ints
+        PCUs for good events.
+
+    Returns
+    -------
+    nothing
     """
 
     print "Output file:", out_file
 
-    out = open(out_file, 'w')
-    out.write("# \tCreated in apply_gti.py")
-    out.write("\n# Decoded event list: %s" % event_list)
-    out.write("\n# GTI applied: %s" % gti_file)
-    out.write("\n# DETCHANS = %d" % detchans)
-    out.write("\n# ")
-    out.write("\n# Column 1: TIME (corrected with TIMEZERO)")
-    out.write("\n# Column 2: CHANNEL (0-DETCHANS)")
-    out.write("\n# Column 3: PCUID (0-4)")
-    out.write("\n# \n")
+    with open(out_file, 'w') as out:
+        out.write("# \tCreated in apply_gti.py")
+        out.write("\n# Decoded event list: %s" % event_list)
+        out.write("\n# GTI applied: %s" % gti_file)
+        out.write("\n# DETCHANS = %d" % detchans)
+        out.write("\n# ")
+        out.write("\n# Column 1: TIME (corrected with TIMEZERO)")
+        out.write("\n# Column 2: CHANNEL (0-DETCHANS)")
+        out.write("\n# Column 3: PCUID (0-4)")
+        out.write("\n# \n")
 
-    for x,y,z in itertools.izip(good_time, good_chan, good_pcu):
-        out.write("%.21f\t%d\t%d\n" % (x, y, z))
-    out.close()
-
-## End of function 'dat_out'
+        for x,y,z in itertools.izip(good_time, good_chan, good_pcu):
+            out.write("%.21f\t%d\t%d\n" % (x, y, z))
 
 
 ################################################################################
 def fits_out(out_file, gti_file, event_list, detchans, data_header, good_time, \
-    good_chan, good_pcu):
+        good_chan, good_pcu):
     """
-    Writes good events to a fits output file.
+    Writes good events to a FITS output file.
 
+    Parameters
+    ----------
+    out_file : str
+        Filename of the FITS output file to write the good events to.
+
+    gti_file : str
+        Filename of the GTI (good times interval) file.
+
+    event_list : str
+        Filename of the unfiltered event list.
+
+    detchans : int
+        Number of energy channels for the detector mode.
+
+    data_header : astropy.io.fits header object
+        FITS header of the input event list.
+
+    good_time : np.array of floats
+        Times for good events.
+
+    good_chan : np.array of ints
+        Detector mode energy channels for good events.
+
+    good_pcu : np.array of ints
+        PCUs for good events.
+
+    Returns
+    -------
+    nothing
     """
 
     print "Output file:", out_file
@@ -64,8 +116,8 @@ def fits_out(out_file, gti_file, event_list, detchans, data_header, good_time, \
     prihdr.set('RAW_EVT', event_list, "Decoded event list")
     prihdr.set('GTI_FILE', gti_file, "GTI file applied to decoded event list")
     prihdr.set('NOTES', 1, "TIMEZERO applied to TIME in Column 1.")
-    prihdr.set('DETCHANS', detchans, "Total number of detector energy channels \
-available")
+    prihdr.set('DETCHANS', detchans, "Total number of detector energy channels"\
+            " available")
     prihdu = fits.PrimaryHDU(header=prihdr)
 
     #####################
@@ -74,14 +126,14 @@ available")
 
     col1 = fits.Column(name='TIME', unit='Hz', format='D', array=good_time)
     col2 = fits.Column(name='CHANNEL', unit='(0-DETCHANS)', format='I', \
-        array=good_chan)
+            array=good_chan)
     col3 = fits.Column(name='PCUID', unit='(0-4)', format='I', array=good_pcu)
     cols = fits.ColDefs([col1, col2, col3])
     tbhdu = fits.BinTableHDU.from_columns(cols)
 
     ## If the file already exists, remove it
-    assert out_file[-4:].lower() == "fits", \
-        'ERROR: Standard output file must have extension ".fits".'
+    assert out_file[-4:].lower() == "fits", "ERROR: Standard output file must "\
+            "have extension '.fits'."
     if os.path.isfile(out_file):
         os.remove(out_file)
 
@@ -92,13 +144,32 @@ available")
     thdulist = fits.HDUList([prihdu, tbhdu])
     thdulist.writeto(out_file)
 
-## End of function 'fits_out'
-
 
 ################################################################################
 def main(event_list, gti_file, out_file):
     """
     Applies a GTI to an event list, to filter out events from bad times.
+
+    Parameters
+    ----------
+    event_list : str
+        Filename of the FITS file containing an unfiltered event list.
+
+    gti_file : str
+        Filename of the GTI (good times interval) file, in FITS or txt format.
+
+    out_file : str
+        Filename of the FITS file to save the good events to.
+
+    Returns
+    -------
+    nothing
+
+    Raises
+    ------
+    IOError if the event list doesn't exist or isn't a FITS file.
+
+    IOError if the GTI file has extension .gti but isn't in FITS format.
 
     """
 
@@ -171,9 +242,9 @@ def main(event_list, gti_file, out_file):
         gti_stop = t[1] + timezero # Back of the end-time-bin
 
         if data_starttime < gti_start and \
-            data_starttime < gti_stop and \
-            data_stoptime < gti_start and \
-            data_stoptime < gti_stop:
+                data_starttime < gti_stop and \
+                data_stoptime < gti_start and \
+                data_stoptime < gti_stop:
 
 # 			print "Data stop before GTI starts."
             pass
@@ -214,38 +285,43 @@ def main(event_list, gti_file, out_file):
     ## Output
     ##########
 
-    if out_file[-4:].lower() == "fits":
+    # if out_file[-4:].lower() == "fits":
 
-        fits_out(out_file, gti_file, event_list, detchans, data_header, \
+    assert out_file[-4:].lower() == "fits", "ERROR: Output file must be FITS."
+    fits_out(out_file, gti_file, event_list, detchans, data_header, \
             good_time, good_chan, good_pcu)
 
-    elif out_file[-3:].lower() == "dat":
-
-        dat_out(out_file, gti_file, event_list, detchans, good_time, good_chan,\
-            good_pcu)
-    else:
-
-        raise Exception("ERROR: File type of GTI'd event list must be .dat or .fits.")
- 
- ## End of function 'main'
+    # elif out_file[-3:].lower() == "dat":
+    #
+    #     dat_out(out_file, gti_file, event_list, detchans, good_time, good_chan,\
+    #             good_pcu)
+    # else:
+    #
+    #     raise Exception("ERROR: File type of GTI'd event list must be .dat or "\
+    #             ".fits.")
 
 
 ################################################################################
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(usage='applygti.py eventlist gtifile \
-outfile', description='Applies a GTI (good time interval) to an RXTE decoded \
-event list. Corrects for TIMEZERO. Does not select PCU.')
+    #####################################################
+    ## Parsing command line arguments and calling 'main'
+    #####################################################
 
-    parser.add_argument('eventlist', help="The full path of the decoded event \
-list file.")
+    parser = argparse.ArgumentParser(usage="applygti.py eventlist gtifile "\
+            "outfile", description="Applies a GTI (good time interval) to an "\
+            "RXTE decoded event list. Corrects for TIMEZERO. Does not select "\
+            "PCU.")
 
-    parser.add_argument('gtifile', help="The full path of the (FITS) GTI file, \
-made in HEASoft's 'maketime' script. This program assumes that a FITS-format \
-GTI file will have the extension '.gti'.")
+    parser.add_argument('eventlist', help="The full path of the decoded event "\
+            "list file.")
 
-    parser.add_argument('outfile', help="Name of the .fits output file, to \
-write the GTI'd event list to.")
+    parser.add_argument('gtifile', help="The full path of the (FITS) GTI file,"\
+            " made in HEASoft's 'maketime' script. This program assumes that a"\
+            " FITS-format GTI file will have the extension '.gti'.")
+
+    parser.add_argument('outfile', help="Name of the .fits output file, to "\
+            "write the GTI'd event list to.")
 
     args = parser.parse_args()
 
