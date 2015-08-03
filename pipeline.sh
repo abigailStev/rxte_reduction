@@ -34,9 +34,9 @@ out_dir_prefix="$home_dir/Reduced_data"  ## Prefix of output directory
 # list_dir="$home_dir/Dropbox/Research/sample_data"
 # out_dir_prefix="$home_dir/Dropbox/Research/sample_data"
 
-# prefix="P70080"
+prefix="P70080"
 # prefix="j1808-2002"
-prefix="GX339-BQPO"
+# prefix="GX339-BQPO"
 # prefix="GX339-soft"
 # prefix="j1808-1HzQPO"
 # prefix="4U0614"
@@ -44,13 +44,16 @@ prefix="GX339-BQPO"
 
 datamode="E_125us_64M_0_1s"
 
-dt=64  ## Multiple of the time resolution of the data for ps and ccf
-numsec=64  ## Length of segments in seconds of Fourier segments for analysis
+dt=1  ## Multiple of the time resolution of the data for ps and ccf
+numsec=4  ## Length of segments in seconds of Fourier segments for analysis
 
 testing=0  ## 1 is yes, 0 is no
 filtering=0 ## 0 = no, 1 = yes; 0 is for QPOs, 1 is for coherent pulses
 
-day=$(date +%y%m%d)  # make the date a string and assign it to 'day'
+# day=$(date +%y%m%d)  # make the date a string and assign it to 'day'
+# day="150727"
+day="150128"
+
 
 # newfile_list="$list_dir/${prefix}_newfiles_1.lst"
 # obsID_list="$list_dir/${prefix}_obsIDs_1.lst"
@@ -76,7 +79,8 @@ day=$(date +%y%m%d)  # make the date a string and assign it to 'day'
 newfile_list="$list_dir/${prefix}_${datamode}.xdf"
 # obsID_list="$list_dir/${prefix}_obsIDs_goodSN.lst"
 # event_list="$list_dir/${prefix}_eventlists_goodSN.lst"
-event_list="$list_dir/${prefix}_eventlists_9.lst"
+# event_list="$list_dir/${prefix}_eventlists_9.lst"
+event_list="$list_dir/${prefix}_eventlists.lst"
 
 ################################################################################
 ################################################################################
@@ -183,10 +187,10 @@ cd "$ccf_dir"
 
 # time "$ccf_dir"/loop_ccf.sh
 # 
-echo time ./run_multi_CCF.sh "$event_list" "$prefix" "$dt" "$numsec" \
-	"$testing" "$day" "$filtering"
-time "$ccf_dir"/run_multi_CCF.sh "$event_list" "$prefix" "$dt" "$numsec" \
-	"$testing" "$day" "$filtering"
+# echo time ./run_multi_CCF.sh "$event_list" "$prefix" "$dt" "$numsec" \
+# 	"$testing" "$day" "$filtering"
+# time "$ccf_dir"/run_multi_CCF.sh "$event_list" "$prefix" "$dt" "$numsec" \
+# 	"$testing" "$day" "$filtering"
 
 
 ################################################################################
@@ -200,12 +204,12 @@ cd "$es_dir"
 # echo time ./run_energyspec.sh "$prefix" "$dt" "$numsec" "$testing" "$day"
 # time "$es_dir"/run_energyspec.sh "$prefix" "$dt" "$numsec" "$testing" "$day"
 
-# time "$es_dir"/sed_fitting.sh "$prefix" "$dt" "$numsec" "$testing" "$day"
+time "$es_dir"/sed_fitting.sh "$prefix" "$dt" "$numsec" "$testing" "$day"
 
 
 ################################################################################
 ## All done!
-echo "Finished pipeline.sh."
+echo -e "\nFinished pipeline.sh."
 cd "$current_dir"
 echo " "
 ################################################################################
