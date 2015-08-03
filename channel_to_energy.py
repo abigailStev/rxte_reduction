@@ -4,7 +4,7 @@ import os.path
 
 import tools  # in https://github.com/abigailStev/whizzy_scripts
 
-__author__ = "Abigail Stevens, A.L.Stevens at uva.nl"
+__author__ = "Abigail Stevens <A.L.Stevens at uva.nl>"
 __version__ = "0.2 2015-06-16"
 
 """
@@ -44,7 +44,10 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    ################
     ## Idiot checks
+    ################
+
     assert os.path.isfile(args.ec_table_file), "ERROR: Energy-to-channel "\
             "conversion table does not exist."
     assert os.path.isfile(args.chan_bin_file), "ERROR: Channel binning file "\
@@ -55,6 +58,7 @@ if __name__ == "__main__":
     #############################
     ## Loading tables from files
     #############################
+
     ec_table = np.loadtxt(args.ec_table_file)
     chan_bin_table = np.loadtxt(args.chan_bin_file)
 
@@ -65,8 +69,8 @@ if __name__ == "__main__":
         ec_col = 7
 
     ## Extracting specific columns (these numbers don't change)
-    energies = ec_table[:, ec_col]  ## Column with the energy in keV per absolute
-                                    ## channel
+    energies = ec_table[:, ec_col]  ## Column with the energy in keV per
+                                    ## absolute channel
     binning = chan_bin_table[:, 2]  ## Column telling how many absolute channels
                                     ## to bin together for that energy bin
 
