@@ -3,6 +3,8 @@
 All of this is designed for RXTE PCA event-mode data. Heasoft must be installed
 and CALDB must be in working order.
 
+The code in this repository is licensed under the MIT license. See LICENSE.md for details.
+
 ## Contents
 
 ### addpha.py
@@ -72,3 +74,5 @@ standard-2 spectra and lightcurve and event-mode spectra and light curve. Does
 the above for each obsID, and for everything all together.
 
 ### xtescan.sh
+
+[![astropy](http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat)](http://www.astropy.org/) 
