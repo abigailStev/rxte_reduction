@@ -85,9 +85,9 @@ saa_history="$list_dir/pca_saa_history"
 ## For saxj1808, to filter out the thermonuclear bursts
 # filtex="(PCU2_ON==1)&&(PCU0_ON==1)&&(elv>10)&&(offset<0.02)&&(VpX1LCntPcu2<=150)&&(VpX1RCntPcu2<=150)"
 ## For GX339 QPOs; don't need to worry about time_since_saa since it's bright
-# filtex="(PCU2_ON==1)&&(NUM_PCU_ON>=2)&&(elv>10)&&(offset<0.02)"  
+filtex="(PCU2_ON==1)&&(NUM_PCU_ON>=2)&&(elv>10)&&(offset<0.02)"
 ## For j1808-1HzQPO; also use faint background model
-filtex="(PCU2_ON==1)&&(NUM_PCU_ON>=2)&&(elv>10)&&(offset<0.02)&&(VpX1LCntPcu2<=150)&&(VpX1RCntPcu2<=150)&&(TIME_SINCE_SAA>30)&&(ELECTRON2<0.1)"  
+# filtex="(PCU2_ON==1)&&(NUM_PCU_ON>=2)&&(elv>10)&&(offset<0.02)&&(VpX1LCntPcu2<=150)&&(VpX1RCntPcu2<=150)&&(TIME_SINCE_SAA>30)&&(ELECTRON2<0.1)"
 ## For thermonuclear burst oscillations ONLY
 # filtex="(PCU2_ON==1)&&(NUM_PCU_ON>=2)&&(elv>10)&&(offset<0.02)&&(VpX1LCntPcu2>=100)&&(VpX1RCntPcu2>=100)"
 
