@@ -67,7 +67,7 @@ added.")
 		print "\tERROR: No input .pha files exist in %s. Exiting." % args.file_list
 		exit()
     	
-    print " i = ", i
+#     print " i = ", i
     
     ## Need to copy the first file and write over it -- this way it has all the
     ## header information needed by other FTOOLS. Relevant keywords are also 
