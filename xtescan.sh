@@ -23,17 +23,19 @@
 ##     <fileprefix>_<datamode>.lst  - one per unique data mode
 ##
 ## History:
-##     13/04/2007 -- v1.0 -- first working version
-##     18/04/2007 -- v1.1 -- added .xdf output files
-##     17/05/2007 -- philv1.2 -- modified to use input obsid list
-##	   02/02/2015 -- abbiev1.3 -- now in bash, flipped order of inputs
-##     11/02/2015 -- abbiev1.5 -- uses xargs to trim leading whitespace from 
-##								  number variables
+##		13/04/2007 -- v1.0 -- first working version
+##      18/04/2007 -- v1.1 -- added .xdf output files
+##      17/05/2007 -- philv1.2 -- modified to use input obsid list
+##	    02/02/2015 -- abbiev1.3 -- now in bash, flipped order of inputs
+##      11/02/2015 -- abbiev1.5 -- uses xargs to trim leading whitespace from 
+##								   number variables
+##		02/09/2015 -- abbiev1.6 -- only takes list of obsIDs, no propIDs needed.
+##
 ################################################################################
 
 ## Make sure the input arguments are ok
 if (( $# != 2 )); then
-    echo -e "\t\tUsage: ./xtescan.sh <filename prefix> <prop ID list>\n"
+    echo -e "\t\tUsage: ./xtescan.sh <filename prefix> <obsID list>\n"
     exit
 fi
 
