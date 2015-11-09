@@ -1,0 +1,20 @@
+# Sub-directories
+.idea/*
+.ipynb_checkpoints/*
+OLD/*
+
+# Plots and images
+*.png
+*.eps
+
+# Text output and log files
+*.log
+*.txt
+
+# These weird files
+*.pyc
+
+# Specific data products
+*.qdp
+*.xdf
+*.lst
