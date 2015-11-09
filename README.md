@@ -1,10 +1,9 @@
 # rxte_reduction repository
 
 All of this is designed for RXTE PCA event-mode data. Heasoft must be installed
-and CALDB must be in working order.
+and CALDB must be in working order. This code takes RXTE data, filters it, and 
+makes it into a nice FITS-format event list, to be read by spectral-timing code.
 
-The code in this repository is licensed under the MIT license. See LICENSE.md 
-for details.
 
 ## Contents
 
@@ -67,7 +66,6 @@ and run_multi_powerspec.py (in power_spectra directory), loop_ccf.sh and
 run_multi_ccf.sh (in cross_correlation directory), and run_energyspec.sh and 
 sed_fitting.sh (in energy_spectra directory).
 
-
 ### plot_std2_lightcurve.py
 Plots a Standard-2 light curve (16s binning) to show general trends of the data.
 Used in pipeline.sh.
@@ -93,6 +91,17 @@ Uses many of the smaller scripts in this directory.
 ### xtescan.sh
 Determines the configuration/parameters/settings of each observation for a list
 of obsIDs. Used in pipeline.sh.
+
+
+## Authors and License
+* Abigail Stevens (UvA API)
+
+Pull requests are welcome!
+
+All code is Copyright 2013-2015 The Authors, and is distributed under the MIT 
+Licence. See LICENSE for details. If you are interested in the further 
+development of rxte_reduction, please [get in touch via the issues]
+(https://github.com/abigailstev/rxte_reduction/issues)!
 
 
 [![astropy](http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat)](http://www.astropy.org/) 
