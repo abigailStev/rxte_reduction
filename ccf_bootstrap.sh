@@ -2,7 +2,8 @@
 
 ################################################################################
 ##
-## Bootstrapping errors on CCF for testing SED fits.
+## Bootstrapping errors on CCF for testing SED fits. This is basically the 
+## second half of pipeline.sh but for bootstrapping.
 ##
 ## Change the directory names and specifiers before the double '#' row to best
 ## suit your setup. Also need to check these within run_multi_ccf_bootstrap.sh, 
