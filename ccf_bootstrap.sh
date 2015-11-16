@@ -33,12 +33,12 @@ dt=64  ## Multiple of the time resolution of the data for ps and ccf
 numsec=64  ## Length of segments in seconds of Fourier segments for analysis
 
 # boot_num=1000  ## Number of bootstrap realizations to do 
-boot_num=10  ## Number of bootstrap realizations to do 
+boot_num=2  ## Number of bootstrap realizations to do 
 testing=0  ## 1 is yes, 0 is no
 filtering="no" ## "no" for QPOs, or "lofreq:hifreq" in Hz for coherent pulsations
 
 day=$(date +%y%m%d)  # make the date a string and assign it to 'day'
-day="151106"
+# day="151112"
 
 newfile_list="$list_dir/${prefix}_${datamode}.xdf"
 event_list="$list_dir/${prefix}_eventlists_9.lst"
@@ -66,8 +66,8 @@ fi
 echo -e "\n--- CCF ---"
 cd "$ccf_dir"
 
-# time "$ccf_dir"/run_bootstrap_multi_ccf.sh "$event_list" "$prefix" "$dt" \
-# 		"$numsec" "$testing" "$day" "$filtering" "$boot_num"
+time "$ccf_dir"/run_bootstrap_multi_ccf.sh "$event_list" "$prefix" "$dt" \
+		"$numsec" "$testing" "$day" "$filtering" "$boot_num"
 
 ################################################################################
 ##																			  ##
@@ -77,8 +77,8 @@ cd "$ccf_dir"
 echo -e "\n--- Energy spectra ---"
 cd "$es_dir"
 
-# source "$es_dir"/sed_fit_bootstrap.sh "$prefix" "$dt" "$numsec" "$testing" \
-# 		"$day" "$boot_num"
+source "$es_dir"/sed_fit_bootstrap.sh "$prefix" "$dt" "$numsec" "$testing" \
+		"$day" "$boot_num"
 
 ################################################################################
 ##																			  ##
@@ -88,11 +88,11 @@ cd "$es_dir"
 echo -e "\n--- Simulating lag-energy spectra ---"
 cd "$sim_dir"
 
-time py "$sim_dir"/sim_qpo_bootstrap.py 
+time python "$sim_dir"/sim_qpo_bootstrap.py \
 		--prefix "$prefix" \
 		--dt_mult "$dt" \
-		--nsec"$numsec" \
-		--testing "$testing" \ 
+		--nsec "$numsec" \
+		--testing "$testing" \
 		--day "$day" \
 		--boot "$boot_num"
 
