@@ -39,11 +39,7 @@ out_dir_prefix="$home_dir/Reduced_data"  ## Prefix of output directory
 # prefix="P70080"
 # prefix="j1808-2002"
 prefix="GX339-BQPO"
-# prefix="david"
-# prefix="GX339-soft"
 # prefix="j1808-1HzQPO"
-# prefix="4U0614"
-# prefix="4u1636superburst"
 
 datamode="E_125us_64M_0_1s"
 
@@ -54,10 +50,11 @@ testing=0  ## 1 is yes, 0 is no
 # filtering="401:401" ## "no" for QPOs, or "lofreq:hifreq" in Hz for coherent pulsations
 filtering="no" ## "no" for QPOs, or "lofreq:hifreq" in Hz for coherent pulsations
 
-day=$(date +%y%m%d)  # make the date a string and assign it to 'day'
+# day=$(date +%y%m%d)  # make the date a string and assign it to 'day'
 # day="150128"
 # day="150902"
-
+# day="151119"
+day="151204"
 
 # newfile_list="$list_dir/${prefix}_newfiles_1.lst"
 # obsID_list="$list_dir/${prefix}_obsIDs_1.lst"
@@ -192,10 +189,10 @@ cd "$ccf_dir"
 
 # time "$ccf_dir"/loop_ccf.sh
 # 
-echo time ./run_multi_ccf.sh "$event_list" "$prefix" "$dt" "$numsec" \
-		"$testing" "$day" "$filtering"
-time "$ccf_dir"/run_multi_ccf.sh "$event_list" "$prefix" "$dt" "$numsec" \
-		"$testing" "$day" "$filtering"
+# echo time ./run_multi_ccf.sh "$event_list" "$prefix" "$dt" "$numsec" \
+# 		"$testing" "$day" "$filtering"
+# time "$ccf_dir"/run_multi_ccf.sh "$event_list" "$prefix" "$dt" "$numsec" \
+# 		"$testing" "$day" "$filtering"
 
 
 ################################################################################
@@ -209,8 +206,8 @@ cd "$es_dir"
 # echo time ./run_energyspec.sh "$prefix" "$dt" "$numsec" "$testing" "$day"
 # time "$es_dir"/run_energyspec.sh "$prefix" "$dt" "$numsec" "$testing" "$day"
 
-# echo time "$es_dir"/sed_fitting.sh "$prefix" "$dt" "$numsec" "$testing" "$day"
-# source "$es_dir"/sed_fitting.sh "$prefix" "$dt" "$numsec" "$testing" "$day"
+echo time "$es_dir"/sed_fitting.sh "$prefix" "$dt" "$numsec" "$testing" "$day"
+source "$es_dir"/sed_fitting.sh "$prefix" "$dt" "$numsec" "$testing" "$day"
 
 
 ################################################################################
@@ -221,9 +218,9 @@ cd "$es_dir"
 echo -e "\n--- Simulate energy spectra and lags ---"
 cd "$sim_dir"
 
-# echo time ./run_fake_qpo_spectra.sh "$prefix" "$dt" "$numsec" "$testing" "$day"
-# time "$sim_dir"/run_fake_qpo_spectra.sh "$prefix" "$dt" "$numsec" "$testing" \
-# 		"$day"
+echo time ./run_fake_qpo_spectra.sh "$prefix" "$dt" "$numsec" "$testing" "$day"
+time "$sim_dir"/run_fake_qpo_spectra.sh "$prefix" "$dt" "$numsec" "$testing" \
+		"$day"
 
 
 ################################################################################
