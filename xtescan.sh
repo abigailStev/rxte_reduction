@@ -2,7 +2,7 @@
 
 ################################################################################
 ##
-## This bash version was written by Abigail Stevens, 2015
+## This bash version was written by Abigail Stevens, 2015-2016
 ## 
 ## Based on xtescan2 by Simon Vaughan 2007, modified by Phil Uttley to
 ## determine configs for a list of obs-IDs rather than a single 
@@ -56,109 +56,99 @@ if [ -e $allinfo_list ]; then rm -f $allinfo_list; fi; touch $allinfo_list
 if [ -e $config_list ]; then rm -f $config_list; fi; touch $config_list
 
 ################################################################################
+	
+########################
+## Loop over all obsIDs
+########################
 
-##############################
-## Loop over all proposal IDs
-##############################
-# for line in $( cat "$proplist" ); do
-# 
-# 	IFS=',' read -a array <<< "$line"
-# 	propID="${array[1]}"
-# 	obslist="$list_dir/${propID}_dl_obsIDs.txt"
-# 	data_dir="$home_dir/Data/RXTE/$propID"
-	
-	########################
-	## Loop over all obsIDs
-	########################
-	
-	for obsid in $( cat "$obslist" ) ; do
-		
-		IFS='-' read -a array <<< "$obsid"
-		propID=$( echo P"${array[0]}" )
-		data_dir="$home_dir/Data/RXTE/$propID"
+for obsid in $( cat "$obslist" ) ; do
+
+	IFS='-' read -a array <<< "$obsid"
+	propID=$( echo P"${array[0]}" )
+	data_dir="$home_dir/Data/RXTE/$propID"
 
 # 		echo "$data_dir"
-		
-		if [ ! -d "$data_dir/$obsid" ]; then
-			echo -e "\tERROR: Data directory for $obsid does not exist."
-			continue
-		fi
-		
-		## List all the PCA science files
-		ls "$data_dir/$obsid"/pca/FS* > pcafiles.lst
-		n=$( cat pcafiles.lst | wc -l )
-		if (( n == 0 )); then
-			echo -e "\tERROR: No PCA science files for $obsid."
-			continue
+
+	if [ ! -d "$data_dir/$obsid" ]; then
+		echo -e "\tERROR: Data directory for $obsid does not exist."
+		continue
+	fi
+
+	## List all the PCA science files
+	ls "$data_dir/$obsid"/pca/FS* > pcafiles.lst
+	n=$( cat pcafiles.lst | wc -l )
+	if (( n == 0 )); then
+		echo -e "\tERROR: No PCA science files for $obsid."
+		continue
+	else
+		echo "Searching $obsid, found $n files." | xargs
+	fi
+
+	## Loop over each PCA data file within the ObsID
+	i=0
+	for pcafile in $( more pcafiles.lst ); do
+		(( i++ ))
+# 		if [ ${pcafile##*.} == gz ]; then  ## If it's gzipped
+# 				gunzip -f "$pcafile"
+# 				pcafile="${pcafile%.*}"
+# 		fi
+
+		## Extract the PCA/EA data conguration/mode from PCA data file
+		datamode=$( python -c "from tools import get_key_val; print get_key_val('$pcafile', 1, 'DATAMODE')" )
+		IFS='_' read -a datamodearray <<< "$datamode"
+
+		## Find time resolution from PCA data file
+		if [ ${datamodearray[0]} == "B" ] || [ ${datamodearray[0]} == "CB" ] || [ ${datamodearray[0]} == "SB" ]; then
+			deltaT=$( python -c "from tools import get_key_val; print get_key_val('$pcafile', 1, '1CDLT2')" )
+			echo "$deltaT" > timestep.txt
 		else
-			echo "Searching $obsid, found $n files." | xargs
+			deltaT=$( python -c "from tools import get_key_val; print get_key_val('$pcafile', 1, 'TIMEDEL')" )
+			echo "$deltaT"
+			echo "$deltaT" > timestep.txt
 		fi
 
-		## Loop over each PCA data file within the ObsID
-		i=0
-		for pcafile in $( more pcafiles.lst ); do
-			(( i++ ))
-	# 		if [ ${pcafile##*.} == gz ]; then  ## If it's gzipped
-	# 				gunzip -f "$pcafile"
-	# 				pcafile="${pcafile%.*}"
-	# 		fi
-		
-			## Extract the PCA/EA data conguration/mode from PCA data file
-			datamode=$( python -c "from tools import get_key_val; print get_key_val('$pcafile', 1, 'DATAMODE')" )
-			IFS='_' read -a datamodearray <<< "$datamode"
-		
-			## Find time resolution from PCA data file
-			if [ ${datamodearray[0]} == "B" ] || [ ${datamodearray[0]} == "CB" ] || [ ${datamodearray[0]} == "SB" ]; then
-				deltaT=$( python -c "from tools import get_key_val; print get_key_val('$pcafile', 1, '1CDLT2')" )
-				echo "$deltaT" > timestep.txt
-			else
-				deltaT=$( python -c "from tools import get_key_val; print get_key_val('$pcafile', 1, 'TIMEDEL')" )
-				echo "$deltaT" > timestep.txt
+		## Convert from scientific (1.0E-1) notation to floating if needed (for 'bc')
+		if grep -q "e" timestep.txt; then
+			echo "Scientific notation"
+			float=$(echo $deltaT | cut -d 'e' -f1 )
+			expo=$( echo $deltaT | cut -d 'e' -f2 )
+			echo "FLOAT=$float"
+			echo "EXPO=$expo"
+			if (( float != expo )); then
+				deltaT=$( echo "scale=14; ($float)*10^($expo)" | bc -l )
 			fi
-		
-			## Convert from scientific (1.0E-1) notation to floating if needed (for 'bc')
-			if grep -q "e" timestep.txt; then
-				echo "Scientific notation"
-				float=$(echo $deltaT | cut -d 'e' -f1 )
-				expo=$( echo $deltaT | cut -d 'e' -f2 )
-				echo "FLOAT=$float"
-				echo "EXPO=$expo"
-				if (( float != expo )); then
-					deltaT=$( echo "scale=14; ($float)*10^($expo)" | bc -l )
-				fi
-			fi
+		fi
 
-			## Convert dT from floating point seconds to 2^x seconds
-			dt=$( echo "scale=14 ; l($deltaT)/l(2.0)" | bc -l )
-			dt2=$( echo "scale=0 ; ($dt)/1" | bc -l )
+		## Convert dT from floating point seconds to 2^x seconds
+		dt=$( echo "scale=14 ; l($deltaT)/l(2.0)" | bc -l )
+		dt2=$( echo "scale=0 ; ($dt)/1" | bc -l )
 
-			## Extract the obs time from PCA data file
-			obstime=$( python -c "from tools import get_key_val; print get_key_val('$pcafile', 1, 'TSTART')" )
+		## Extract the obs time from PCA data file
+		obstime=$( python -c "from tools import get_key_val; print get_key_val('$pcafile', 1, 'TSTART')" )
 
-			## Extract the obs date and (hh:mm:ss) time from PCA data file
-			obsdate=$( python -c "from tools import get_key_val; print get_key_val('$pcafile', 1, 'DATE-OBS')" )
+		## Extract the obs date and (hh:mm:ss) time from PCA data file
+		obsdate=$( python -c "from tools import get_key_val; print get_key_val('$pcafile', 1, 'DATE-OBS')" )
 
-			## Tell the user what we have found so far
-			echo -e "\t$i /$n -- $datamode $deltaT 2^$dt2" | xargs
+		## Tell the user what we have found so far
+		echo -e "\t$i /$n -- $datamode $deltaT 2^$dt2" | xargs
 
-			## For this file add the filename, config, date and time to the output file 
-			echo "$pcafile $datamode $obsdate 2^$dt2" >> $allinfo_list
+		## For this file add the filename, config, date and time to the output file
+		echo "$pcafile $datamode $obsdate 2^$dt2" >> $allinfo_list
 
-			## Check whether the datamode for the current file is listed in the list of datamodes.
-			## If not then add it to the list of (unique) datamodes
-			grep $datamode $config_list > config.txt
-			foundit=$( cat config.txt | wc -l )
-			if (( foundit == 0 )); then
-				echo $datamode >> $config_list
-			fi
-	
-		## End of loop over PCA data files within the ObsID
-		done
-			
-	## End of loop over each ObsID
+		## Check whether the datamode for the current file is listed in the list of datamodes.
+		## If not then add it to the list of (unique) datamodes
+		grep $datamode $config_list > config.txt
+		foundit=$( cat config.txt | wc -l )
+		if (( foundit == 0 )); then
+			echo $datamode >> $config_list
+		fi
+
+	## End of loop over PCA data files within the ObsID
 	done
-## End of loop over each proposal ID
-# done
+
+## End of loop over each ObsID
+done
+
 echo ""
 
 ################################################################################
