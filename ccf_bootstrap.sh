@@ -32,8 +32,8 @@ prefix="GX339-BQPO"
 dt=64  ## Multiple of the time resolution of the data for ps and ccf
 numsec=64  ## Length of segments in seconds of Fourier segments for analysis
 
-# boot_num=1000
-boot_num=5537  ## Number of bootstrap realizations to do; 1 to boot_num, incl. 
+#boot_num=10
+boot_num=5537  ## Number of bootstrap realizations to do; 1 to boot_num, incl.
 testing=0  ## 1 is yes, 0 is no
 filtering="no"  ## "no" for QPOs, or "lofreq:hifreq" in Hz for coherent pulsations
 
@@ -77,7 +77,7 @@ cd "$ccf_dir"
 echo -e "\n--- Energy spectra ---"
 cd "$es_dir"
 
-# source "$es_dir"/sed_fit_bootstrap.sh "$prefix" "$dt" "$numsec" "$testing" \
+#source "$es_dir"/sed_fit_bootstrap.sh "$prefix" "$dt" "$numsec" "$testing" \
 # 	"$day" "$boot_num"
 
 ################################################################################
