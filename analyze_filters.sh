@@ -7,7 +7,7 @@
 ## Something_list could be either an obsID list or a list of filter files, but
 ## it must be internally consistent.
 ## 
-## Written by Abigail Stevens, A.L.Stevens at uva.nl, 2015
+## Written by Abigail Stevens <A.L.Stevens at uva.nl>, 2015-2016
 ## 
 ################################################################################
 
@@ -83,8 +83,8 @@ fi
 echo python ./pcu_filter.py "$filter_list" "$prefix" "$out_dir"
 python "$script_dir"/pcu_filter.py "$filter_list" "$prefix" "$out_dir"
 		
-# if [ -e "$out_dir/${prefix}_pcus_on.png" ]; then open "$out_dir/${prefix}_pcus_on.png"; fi
-# if [ -e "$out_dir/${prefix}_filter_info.txt" ]; then open "$out_dir/${prefix}_filter_info.txt"; fi
+ if [ -e "$out_dir/${prefix}_pcus_on.png" ]; then open "$out_dir/${prefix}_pcus_on.png"; fi
+ if [ -e "$out_dir/${prefix}_filter_info.txt" ]; then open "$out_dir/${prefix}_filter_info.txt"; fi
 
 ################################################################################
 ## All done!
