@@ -8,7 +8,7 @@
 ## Notes: HEASOFT 6.14 (or higher), bash 3.*, and Python 2.7.* (with supporting
 ##        libraries) must be installed in order to run this script. 
 ##
-## Written by Abigail Stevens, A.L.Stevens at uva.nl, 2015
+## Written by Abigail Stevens <A.L.Stevens at uva.nl>, 2015-2016
 ## 
 ################################################################################
 
@@ -185,11 +185,11 @@ else
 		chbin=INDEF \
 		mode=ql
 
-	# if [ ! -e "$out_dir/event.lc" ] ; then
-	# 	echo -e "\tERROR: Event-mode light curve not made!"
-	# 	echo -e "\tERROR: Event-mode light curve not made!" >> $progress_log
-	# # 	continue
-	# fi
+	 if [ ! -e "$out_dir/event.lc" ] ; then
+	 	echo -e "\tERROR: Event-mode light curve not made!"
+	 	echo -e "\tERROR: Event-mode light curve not made!" >> $progress_log
+	 # 	continue
+	 fi
 	if [ ! -e "$out_dir/event.pha" ] ; then
 		echo -e "\tERROR: Event-mode spectrum not made!"
 		echo -e "\tERROR: Event-mode spectrum not made!" >> $progress_log
