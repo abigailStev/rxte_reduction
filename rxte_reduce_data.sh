@@ -22,7 +22,7 @@
 ##        access is required for most setups of CALDB.
 ##
 ## Inspired by/Based on G. Lamer (gl@astro.soton.ac.uk)'s script 'xrbgetprod'
-## Written by Abigail Stevens, A.L.Stevens at uva.nl, 2014-2015 
+## Written by Abigail Stevens <A.L.Stevens at uva.nl>, 2014-2016
 ##
 ################################################################################
 
@@ -77,16 +77,18 @@ std2pcu2_cols="$list_dir/std2_pcu2_cols.lst"
 bitfile="$list_dir/bitfile_evt_PCU2" ## Using bitfile_evt_PCU2 for only PCU2 photons
 
 ## The bright bkgd model is good for > 40 counts/sec/pcu
-# bkgd_model="$list_dir/pca_bkgd_cmbrightvle_eMv20051128.mdl"  
+bkgd_model="$list_dir/pca_bkgd_cmbrightvle_eMv20051128.mdl"
 ## The faint bkgd model is good for < 40 counts/sec/pcu
-bkgd_model="$list_dir/pca_bkgd_cmfaintl7_eMv20051128.mdl"
+#bkgd_model="$list_dir/pca_bkgd_cmfaintl7_eMv20051128.mdl"
 saa_history="$list_dir/pca_saa_history"
 
 ## For saxj1808, to filter out the thermonuclear bursts
 # filtex="(PCU2_ON==1)&&(PCU0_ON==1)&&(elv>10)&&(offset<0.02)&&(VpX1LCntPcu2<=150)&&(VpX1RCntPcu2<=150)"
+
 ## For GX339 QPOs; don't need to worry about time_since_saa since it's bright
-# filtex="(PCU2_ON==1)&&(NUM_PCU_ON>=2)&&(elv>10)&&(offset<0.02)"
-filtex="(PCU2_ON==1)&&(NUM_PCU_ON>=1)&&(elv>10)&&(offset<0.02)"
+filtex="(PCU2_ON==1)&&(NUM_PCU_ON>=2)&&(elv>10)&&(offset<0.02)"
+#filtex="(PCU2_ON==1)&&(NUM_PCU_ON>=1)&&(elv>10)&&(offset<0.02)"
+#filtex="(PCU2_ON==1)&&(NUM_PCU_ON>=2)&&(elv>10)&&(offset<0.02)&&(TIME_SINCE_SAA>30)"
 
 ## For j1808-1HzQPO; also use faint background model
 # filtex="(PCU2_ON==1)&&(NUM_PCU_ON>=2)&&(elv>10)&&(offset<0.02)&&(VpX1LCntPcu2<=150)&&(VpX1RCntPcu2<=150)&&(TIME_SINCE_SAA>30)&&(ELECTRON2<0.1)"
@@ -286,8 +288,8 @@ for newfile in $( cat $newfilelist ); do
 	indivextract_args[4]="$std2pcu2_cols"
 	indivextract_args[5]="$bitfile"
 	
-#  	echo ./indiv_extract.sh "${indivextract_args[@]}"
-# 	"$script_dir"/indiv_extract.sh "${indivextract_args[@]}"
+  	echo ./indiv_extract.sh "${indivextract_args[@]}"
+ 	"$script_dir"/indiv_extract.sh "${indivextract_args[@]}"
 
 	echo -e "Finished run for obsID=$obsID \n"				
 	echo -e "Finished run for obsID=$obsID \n" >> $progress_log
@@ -319,7 +321,7 @@ echo ./reduce_alltogether.sh "${alltogether_args[@]}"
 echo ./reduce_alltogether.sh "${alltogether_args[@]}" >> $progress_log
 alltogether_args[7]="$filtex"
 
-# "$script_dir"/reduce_alltogether.sh "${alltogether_args[@]}" 
+"$script_dir"/reduce_alltogether.sh "${alltogether_args[@]}"
 
 
 ################################################################################
