@@ -8,7 +8,7 @@
 ##		  libraries) must be installed in order to run this script. Internet 
 ##        access is required for most setups of CALDB.
 ## 
-## Written by Abigail Stevens, A.L.Stevens at uva.nl, 2015
+## Written by Abigail Stevens <A.L.Stevens at uva.nl>, 2015-2016
 ## 
 ################################################################################
 
@@ -72,6 +72,9 @@ echo "Merging filter files"
 
 ## Sort filter files from above chronologically
 echo "$filter_list"
+## Removing duplicates from the filter list -- can happen if there are multiple
+## orbits per obsID
+python -c "from tools import no_duplicates; no_duplicates('$filter_list')"
 python -c "from tools import time_ordered_list; time_ordered_list('$filter_list')" > ./dump.txt
 echo ./dump.txt
 
