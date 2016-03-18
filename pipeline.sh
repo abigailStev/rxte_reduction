@@ -13,7 +13,7 @@
 ##        libraries) must be installed in order to run this script. Internet 
 ##        access is required for most setups of CALDB.
 ##
-## Written by Abigail Stevens, A.L.Stevens at uva.nl, 2014-2015
+## Author: Abigail Stevens <A.L.Stevens at uva.nl>, 2014-2016
 ## 
 ################################################################################
 
@@ -36,25 +36,30 @@ out_dir_prefix="$home_dir/Reduced_data"  ## Prefix of output directory
 # list_dir="$home_dir/Dropbox/Research/sample_data"
 # out_dir_prefix="$home_dir/Dropbox/Research/sample_data"
 
-# prefix="P70080"
-# prefix="j1808-2002"
-prefix="GX339-BQPO"
-# prefix="j1808-1HzQPO"
+# prefix="GX339-BQPO"
+#prefix="4U1608"
+#prefix="XTE1859-BQPO"
+prefix="GX339-4HzCQPO"
+#prefix="GRO1655-BQPO"
+#prefix="H1743-BQPO"
+#prefix="MAXI1659-BQPO"
 
 datamode="E_125us_64M_0_1s"
+#datamode="E_500us_64M_0_1s"
+#datamode="E_62us_32M_36_1s"
 
-dt=64  ## Multiple of the time resolution of the data for ps and ccf
-numsec=64  ## Length of segments in seconds of Fourier segments for analysis
+dt=32  ## Multiple of the time resolution of the data for ps and ccf
+numsec=32  ## Length of segments in seconds of Fourier segments for analysis
 
 testing=0  ## 1 is yes, 0 is no
 # filtering="401:401" ## "no" for QPOs, or "lofreq:hifreq" in Hz for coherent pulsations
 filtering="no" ## "no" for QPOs, or "lofreq:hifreq" in Hz for coherent pulsations
 
-# day=$(date +%y%m%d)  # make the date a string and assign it to 'day'
+day=$(date +%y%m%d)  # make the date a string and assign it to 'day'
 # day="150128"
 # day="150902"
 # day="151119"
-day="151204"
+# day="151204"
 
 # newfile_list="$list_dir/${prefix}_newfiles_1.lst"
 # obsID_list="$list_dir/${prefix}_obsIDs_1.lst"
@@ -65,10 +70,8 @@ day="151204"
 # obsID_list="$list_dir/${prefix}_obsIDs_half.lst"
 # event_list="$list_dir/${prefix}_eventlists_half.lst"
 # newfile_list="$list_dir/${prefix}_newfiles.lst"
-# obsID_list="$list_dir/${prefix}_obsIDs.lst"
-# event_list="$list_dir/${prefix}_eventlists.lst"
+obsID_list="$list_dir/${prefix}_obsIDs.lst"
 
-# obsID_list="$list_dir/david.lst"
 # newfile_list="$list_dir/${prefix}_${datamode}_1.xdf"
 # obsID_list="$list_dir/${prefix}_obsIDs_1.lst"
 # event_list="$list_dir/${prefix}_eventlists_1.lst"
@@ -81,8 +84,8 @@ day="151204"
 newfile_list="$list_dir/${prefix}_${datamode}.xdf"
 # obsID_list="$list_dir/${prefix}_obsIDs_goodSN.lst"
 # event_list="$list_dir/${prefix}_eventlists_goodSN.lst"
-event_list="$list_dir/${prefix}_eventlists_9.lst"
-# event_list="$list_dir/${prefix}_eventlists.lst"
+# event_list="$list_dir/${prefix}_eventlists_9.lst"
+event_list="$list_dir/${prefix}_eventlists.lst"
 
 ################################################################################
 ################################################################################
@@ -105,8 +108,8 @@ fi
 ################################################################################
 echo -e "\n--- Download data ---"
 
-# echo ./download_obsIDs.sh "$obsID_list"
-# "$script_dir"/download_obsIDs.sh "$obsID_list"
+echo ./download_obsIDs.sh "$obsID_list"
+"$script_dir"/download_obsIDs.sh "$obsID_list"
 
 
 ################################################################################
@@ -116,8 +119,8 @@ echo -e "\n--- Download data ---"
 ################################################################################
 echo -e "\n--- Make list of files to be reduced ---"
 
-# echo time ./xtescan.sh "${prefix}" "$obsID_list"
-# time "$script_dir"/xtescan.sh "${prefix}" "$obsID_list"
+echo time ./xtescan.sh "${prefix}" "$obsID_list"
+time "$script_dir"/xtescan.sh "${prefix}" "$obsID_list"
 
 
 ################################################################################
@@ -132,9 +135,9 @@ echo "$(pwd)/run.log"
 echo "$(pwd)/progress.log"
 ## The first line is good for debugging with only one obsID
 ## The second line is for long runs. 
-# time "$script_dir"/rxte_reduce_data.sh "$newfile_list" "$obsID_list" "${prefix}" 
-# echo time ./rxte_reduce_data.sh "$newfile_list" "$obsID_list" "${prefix}" > run.log
-# time "$script_dir"/rxte_reduce_data.sh "$newfile_list" "$obsID_list" "${prefix}" > run.log
+# time "$script_dir"/rxte_reduce_data.sh "$newfile_list" "$obsID_list" "${prefix}"
+echo time ./rxte_reduce_data.sh "$newfile_list" "$obsID_list" "${prefix}" > run.log
+time "$script_dir"/rxte_reduce_data.sh "$newfile_list" "$obsID_list" "${prefix}" > run.log
 
 
 ################################################################################
@@ -145,10 +148,10 @@ echo "$(pwd)/progress.log"
 echo -e "\n--- Plot Standard 2 light curve ---"
 cd "$script_dir"
 
-# lc_plot="$out_dir_prefix/${prefix}/std2_lc.png"
-# echo python ./plot_std2_lightcurve.py "$prefix" "$obsID_list" "$lc_plot"
-# python "$script_dir"/plot_std2_lightcurve.py "$prefix" "$obsID_list" "$lc_plot"
-# if [ -e "$lightcurve_plot" ]; then open "$lightcurve_plot"; fi
+#lc_plot="$out_dir_prefix/${prefix}/std2_lc.png"
+#echo python ./plot_std2_lightcurve.py "$prefix" "$out_dir_prefix/${prefix}/all_std2.lc" "$lc_plot"
+#python "$script_dir"/plot_std2_lightcurve.py "$prefix" "$out_dir_prefix/${prefix}/all_std2.lc" "$lc_plot"
+#if [ -e "$lightcurve_plot" ]; then open "$lightcurve_plot"; fi
 
 
 ################################################################################
@@ -159,8 +162,8 @@ cd "$script_dir"
 echo -e "\n--- Good event list ---"
 cd "$script_dir"
 
-# echo time ./good_events.sh "$prefix" "$obsID_list" "$event_list"
-# time "$script_dir"/good_events.sh "$prefix" "$obsID_list" "$event_list"
+echo time ./good_events.sh "$prefix" "$obsID_list" "$event_list"
+time "$script_dir"/good_events.sh "$prefix" "$obsID_list" "$event_list"
 
 
 ################################################################################
@@ -172,12 +175,8 @@ echo -e "\n--- Power spectrum ---"
 cd "$ps_dir"
 
 # time "$ps_dir"/loop_powerspec.sh
-# 
-# echo time ./run_multi_powerspec.sh "$event_list" "$prefix" "$dt" "$numsec" \
-# 		"$testing" "$day"
-# time "$ps_dir"/run_multi_powerspec.sh "$event_list" "$prefix" "$dt" "$numsec" \
-# 		"$testing" "$day"
-
+#
+## TODO: NEED TO UPDATE with run_powerspec.sh
 
 ################################################################################
 ##																			  ##
@@ -189,10 +188,8 @@ cd "$ccf_dir"
 
 # time "$ccf_dir"/loop_ccf.sh
 # 
-# echo time ./run_multi_ccf.sh "$event_list" "$prefix" "$dt" "$numsec" \
-# 		"$testing" "$day" "$filtering"
-# time "$ccf_dir"/run_multi_ccf.sh "$event_list" "$prefix" "$dt" "$numsec" \
-# 		"$testing" "$day" "$filtering"
+## TODO: NEED TO UPDATE, with run_ccf.sh
+#
 
 
 ################################################################################
@@ -206,8 +203,8 @@ cd "$es_dir"
 # echo time ./run_energyspec.sh "$prefix" "$dt" "$numsec" "$testing" "$day"
 # time "$es_dir"/run_energyspec.sh "$prefix" "$dt" "$numsec" "$testing" "$day"
 
-echo time "$es_dir"/sed_fitting.sh "$prefix" "$dt" "$numsec" "$testing" "$day"
-source "$es_dir"/sed_fitting.sh "$prefix" "$dt" "$numsec" "$testing" "$day"
+#echo time "$es_dir"/sed_fitting.sh "$prefix" "$dt" "$numsec" "$testing" "$day"
+#source "$es_dir"/sed_fitting.sh "$prefix" "$dt" "$numsec" "$testing" "$day"
 
 
 ################################################################################
@@ -218,9 +215,9 @@ source "$es_dir"/sed_fitting.sh "$prefix" "$dt" "$numsec" "$testing" "$day"
 echo -e "\n--- Simulate energy spectra and lags ---"
 cd "$sim_dir"
 
-echo time ./run_fake_qpo_spectra.sh "$prefix" "$dt" "$numsec" "$testing" "$day"
-time "$sim_dir"/run_fake_qpo_spectra.sh "$prefix" "$dt" "$numsec" "$testing" \
-		"$day"
+#echo time ./run_fake_qpo_spectra.sh "$prefix" "$dt" "$numsec" "$testing" "$day"
+#time "$sim_dir"/run_fake_qpo_spectra.sh "$prefix" "$dt" "$numsec" "$testing" \
+# 		"$day"
 
 
 ################################################################################
