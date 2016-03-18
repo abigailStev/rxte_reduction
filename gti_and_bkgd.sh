@@ -8,7 +8,7 @@
 ##        libraries) must be installed in order to run this script. 
 ##
 ## Inspired by/Based on G. Lamer and P. Uttley's tcsh script 'getgtibackxrb'
-## Written by Abigail Stevens, A.L.Stevens at uva.nl, 2014-2015 
+## Written by Abigail Stevens <A.L.Stevens at uva.nl>, 2014-2016
 ## 
 ################################################################################
 
@@ -92,66 +92,66 @@ for std2_pca_file in $(ls $out_dir/"std2"*.pca); do
 	
 	echo "Making Standard-2 background."
 	echo "Making Standard-2 background." >> $progress_log
-	# std2_bkgd=${std2_pca_file%.*}"_std2.bkgd"
-# 	echo "std2 bkgd file = $std2_bkgd"
-# 	
-# 	if [ -e "$std2_pca_file" ] && [ -e "$bkgd_model" ] && \
-# 		[ -e "$filter_file" ] && [ -e "$saa_history" ]; then
-# 
-# 		pcabackest infile=$std2_pca_file \
-# 			outfile=$std2_bkgd \
-# 			modelfile=$bkgd_model \
-# 			filterfile=$filter_file \
-# 			layers=yes \
-# 			saahfile=$saa_history \
-# 			interval=16 \
-# 			gaincorr=no \
-# 			fullspec=no \
-# 			clobber=yes  	
-# 	fi
-# 	
-# 	if [ -e "$std2_bkgd" ]; then
-# 		
-# 		##########################################################
-# 		## Extract a spectrum from the Standard-2 background file
-# 		##########################################################
-# 		
-# 		saextrct lcbinarray=10000000 \
-# 			maxmiss=200 \
-# 			infile=$std2_bkgd \
-# 			gtiorfile=- \
-# 			gtiandfile="$gti_file" \
-# 			outroot="${std2_bkgd%.*}_bkgd" \
-# 			columns=@"$std2pcu2_cols" \
-# 			accumulate=ONE \
-# 			timecol="Time" \
-# 			binsz=16 \
-# 			mfracexp=INDEF \
-# 			printmode=SPECTRUM \
-# 			lcmode=RATE \
-# 			spmode=SUM \
-# 			mlcinten=INDEF \
-# 			mspinten=INDEF \
-# 			writesum=- \
-# 			writemean=- \
-# 			timemin=INDEF \
-# 			timemax=INDEF \
-# 			timeint=INDEF \
-# 			chmin=INDEF \
-# 			chmax=INDEF \
-# 			chint=INDEF \
-# 			chbin=INDEF \
-# 			dryrun=no \
-# 			clobber=yes
-# 			
-# 		if [ ! -e "${std2_bkgd%.*}_bkgd.pha" ]; then
-# 			echo -e "\tERROR: Standard-2 background spectrum not extracted."
-# 			echo -e "\tERROR: Standard-2 background spectrum not extracted." >> $progress_log
-# 		fi
-# 	else
-# 		echo -e "\tERROR: Standard-2 background file not made."
-# 		echo -e "\tERROR: Standard-2 background file not made." >> $progress_log
-# 	fi
+	std2_bkgd=${std2_pca_file%.*}"_std2.bkgd"
+ 	echo "std2 bkgd file = $std2_bkgd"
+
+ 	if [ -e "$std2_pca_file" ] && [ -e "$bkgd_model" ] && \
+ 		[ -e "$filter_file" ] && [ -e "$saa_history" ]; then
+
+ 		pcabackest infile=$std2_pca_file \
+ 			outfile=$std2_bkgd \
+ 			modelfile=$bkgd_model \
+ 			filterfile=$filter_file \
+ 			layers=yes \
+ 			saahfile=$saa_history \
+ 			interval=16 \
+ 			gaincorr=no \
+ 			fullspec=no \
+ 			clobber=yes
+ 	fi
+
+ 	if [ -e "$std2_bkgd" ]; then
+
+ 		##########################################################
+ 		## Extract a spectrum from the Standard-2 background file
+ 		##########################################################
+
+ 		saextrct lcbinarray=10000000 \
+ 			maxmiss=200 \
+ 			infile=$std2_bkgd \
+ 			gtiorfile=- \
+ 			gtiandfile="$gti_file" \
+ 			outroot="${std2_bkgd%.*}_bkgd" \
+ 			columns=@"$std2pcu2_cols" \
+ 			accumulate=ONE \
+ 			timecol="Time" \
+ 			binsz=16 \
+ 			mfracexp=INDEF \
+ 			printmode=SPECTRUM \
+ 			lcmode=RATE \
+ 			spmode=SUM \
+ 			mlcinten=INDEF \
+ 			mspinten=INDEF \
+ 			writesum=- \
+ 			writemean=- \
+ 			timemin=INDEF \
+ 			timemax=INDEF \
+ 			timeint=INDEF \
+ 			chmin=INDEF \
+ 			chmax=INDEF \
+ 			chint=INDEF \
+ 			chbin=INDEF \
+ 			dryrun=no \
+ 			clobber=yes
+
+ 		if [ ! -e "${std2_bkgd%.*}_bkgd.pha" ]; then
+ 			echo -e "\tERROR: Standard-2 background spectrum not extracted."
+ 			echo -e "\tERROR: Standard-2 background spectrum not extracted." >> $progress_log
+ 		fi
+ 	else
+ 		echo -e "\tERROR: Standard-2 background file not made."
+ 		echo -e "\tERROR: Standard-2 background file not made." >> $progress_log
+ 	fi
 	
 	############################################################################
 	## Event-mode background
@@ -169,21 +169,21 @@ for std2_pca_file in $(ls $out_dir/"std2"*.pca); do
 	
 	if [ -e "$out_dir/evt_${m}.pca" ]; then  ## Only process this bkgd if there's 
 											 ## an accompanying event-mode file
-# 		if [ -e "$std2_pca_file" ] && [ -e "$bkgd_model" ] && \
-# 			[ -e "$filter_file" ] && [ -e "$saa_history" ]; then
-# 		
-# 			pcabackest infile=$std2_pca_file \
-# 				outfile=$event_bkgd \
-# 				modelfile=$bkgd_model \
-# 				filterfile=$filter_file \
-# 				layers=yes \
-# 				saahfile=$saa_history \
-# 				interval=16 \
-# 				gaincorr=yes \
-# 				gcorrfile=caldb \
-# 				fullspec=yes \
-# 				clobber=yes
-# 		fi
+ 		if [ -e "$std2_pca_file" ] && [ -e "$bkgd_model" ] && \
+ 			[ -e "$filter_file" ] && [ -e "$saa_history" ]; then
+
+ 			pcabackest infile=$std2_pca_file \
+ 				outfile=$event_bkgd \
+ 				modelfile=$bkgd_model \
+ 				filterfile=$filter_file \
+ 				layers=yes \
+ 				saahfile=$saa_history \
+ 				interval=16 \
+ 				gaincorr=yes \
+ 				gcorrfile=caldb \
+ 				fullspec=yes \
+ 				clobber=yes
+ 		fi
 	
 		if [ -e "$event_bkgd" ]; then
 			echo "$event_bkgd"
@@ -191,34 +191,34 @@ for std2_pca_file in $(ls $out_dir/"std2"*.pca); do
 			##########################################################
 			## Extract a spectrum from the event-mode background file
 			##########################################################
-# 		
-# 			saextrct lcbinarray=10000000 \
-# 				maxmiss=200 \
-# 				infile=$event_bkgd \
-# 				gtiorfile=- \
-# 				gtiandfile="$gti_file" \
-# 				outroot="${event_bkgd%.*}_bkgd" \
-# 				columns=@tmp_std2_pcu2_cols.lst \
-# 				accumulate=ONE \
-# 				timecol="Time" \
-# 				binsz=16 \
-# 				mfracexp=INDEF \
-# 				printmode=SPECTRUM \
-# 				lcmode=RATE \
-# 				spmode=SUM \
-# 				mlcinten=INDEF \
-# 				mspinten=INDEF \
-# 				writesum=- \
-# 				writemean=- \
-# 				timemin=INDEF \
-# 				timemax=INDEF \
-# 				timeint=INDEF \
-# 				chmin=INDEF \
-# 				chmax=INDEF \
-# 				chint=INDEF \
-# 				chbin=INDEF \
-# 				dryrun=no \
-# 				clobber=yes
+
+ 			saextrct lcbinarray=10000000 \
+ 				maxmiss=200 \
+ 				infile=$event_bkgd \
+ 				gtiorfile=- \
+ 				gtiandfile="$gti_file" \
+ 				outroot="${event_bkgd%.*}_bkgd" \
+ 				columns=@tmp_std2_pcu2_cols.lst \
+ 				accumulate=ONE \
+ 				timecol="Time" \
+ 				binsz=16 \
+ 				mfracexp=INDEF \
+ 				printmode=SPECTRUM \
+ 				lcmode=RATE \
+ 				spmode=SUM \
+ 				mlcinten=INDEF \
+ 				mspinten=INDEF \
+ 				writesum=- \
+ 				writemean=- \
+ 				timemin=INDEF \
+ 				timemax=INDEF \
+ 				timeint=INDEF \
+ 				chmin=INDEF \
+ 				chmax=INDEF \
+ 				chint=INDEF \
+ 				chbin=INDEF \
+ 				dryrun=no \
+ 				clobber=yes
 
 			if [ ! -e "${event_bkgd%.*}_bkgd.pha" ]; then
 				echo -e "\tERROR: Event-mode background spectrum not extracted."
