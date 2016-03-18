@@ -52,7 +52,8 @@ exe_dir="$home_dir/Dropbox/Research/rxte_reduce"
 red_dir="$home_dir/Reduced_data/$prefix"
 list_dir="$home_dir/Dropbox/Lists"
 
-bad_orbits="$red_dir/bad_orbits.lst"  ## list of obsIDs with at leats one orbit with no good events
+bad_orbits="$red_dir/bad_orbits.lst"  ## list of obsIDs with at least one orbit
+                                      ## with no good events
 
 if [ -e "$gtideventlist_list" ]; then rm "$gtideventlist_list"; fi
 touch "$gtideventlist_list"
