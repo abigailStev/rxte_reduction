@@ -1,21 +1,24 @@
-import argparse
-import numpy as np
-from astropy.io import fits
-import itertools
-import os
-
-__author__ = "Abigail Stevens, A.L.Stevens at uva.nl"
-__version__ = "0.2 2015-06-17"
+#!/usr/bin/env python
 
 """
 Applies a GTI to an RXTE decoded event list, to filter out events in bad times.
 This code assumes that the GTI times have not been previously corrected with
 TIMEZERO, but does assume the start time is at the front of the first time bin
-and the end time is at the end of the last time bin.
-
-2014-2015
+and the end time is at the end of the last time bin. Does not select on PCU.
 
 """
+
+import argparse
+import numpy as np
+from astropy.io import fits
+import itertools
+import os
+from astropy.table import Table, Column
+
+__author__ = "Abigail Stevens <A.L.Stevens at uva.nl>"
+__version__ = "0.2 2015-06-17"
+__year__ = "2014-2016"
+
 
 ################################################################################
 def dat_out(out_file, gti_file, event_list, detchans, good_time, good_chan, \
@@ -67,83 +70,90 @@ def dat_out(out_file, gti_file, event_list, detchans, good_time, good_chan, \
         for x,y,z in itertools.izip(good_time, good_chan, good_pcu):
             out.write("%.21f\t%d\t%d\n" % (x, y, z))
 
-
-################################################################################
-def fits_out(out_file, gti_file, event_list, detchans, data_header, good_time, \
-        good_chan, good_pcu):
-    """
-    Writes good events to a FITS output file.
-
-    Parameters
-    ----------
-    out_file : str
-        Filename of the FITS output file to write the good events to.
-
-    gti_file : str
-        Filename of the GTI (good times interval) file.
-
-    event_list : str
-        Filename of the unfiltered event list.
-
-    detchans : int
-        Number of energy channels for the detector mode.
-
-    data_header : astropy.io.fits header object
-        FITS header of the input event list.
-
-    good_time : np.array of floats
-        Times for good events.
-
-    good_chan : np.array of ints
-        Detector mode energy channels for good events.
-
-    good_pcu : np.array of ints
-        PCUs for good events.
-
-    Returns
-    -------
-    nothing
-    """
-
-    print "Output file:", out_file
+#
+# ################################################################################
+# def fits_out(out_file, gti_file, event_list, detchans, data_header, good_time, \
+#         good_chan, good_pcu):
+#     """
+#     Writes good events to a FITS output file.
+#
+#     Parameters
+#     ----------
+#     out_file : str
+#         Filename of the FITS output file to write the good events to.
+#
+#     gti_file : str
+#         Filename of the GTI (good times interval) file.
+#
+#     event_list : str
+#         Filename of the unfiltered event list.
+#
+#     detchans : int
+#         Number of energy channels for the detector mode.
+#
+#     data_header : astropy.io.fits header object
+#         FITS header of the input event list.
+#
+#     good_time : np.array of floats
+#         Times for good events.
+#
+#     good_chan : np.array of ints
+#         Detector mode energy channels for good events.
+#
+#     good_pcu : np.array of ints
+#         PCUs for good events.
+#
+#     Returns
+#     -------
+#     nothing
+#     """
+#
+#     print "Output file:", out_file
 
     ######################
     ## Making FITS header
     ######################
-
-    prihdr = fits.Header()
-    prihdr = data_header
-    prihdr.set('TYPE', "GTI`d event list")
-    prihdr.set('RAW_EVT', event_list, "Decoded event list")
-    prihdr.set('GTI_FILE', gti_file, "GTI file applied to decoded event list")
-    prihdr.set('NOTES', 1, "TIMEZERO applied to TIME in Column 1.")
-    prihdr.set('DETCHANS', detchans, "Total number of detector energy channels"\
-            " available")
-    prihdu = fits.PrimaryHDU(header=prihdr)
+    # time_del = data_header['TIMEDEL']
+    # print time_del
+    # try:
+    #     time_del = float(time_del)
+    # except:
+    #     time_del = float(time_del.split('/')[0])
+    # print time_del
+    # data_header['TIMEDEL'] = time_del
+    #
+    # prihdr = data_header
+    # prihdr.set('TYPE', "GTI`d event list")
+    # prihdr.set('RAW_EVT', event_list, "Decoded event list")
+    # prihdr.set('GTI_FILE', gti_file, "GTI file applied to decoded event list")
+    # prihdr.set('NOTES', 1, "TIMEZERO applied to TIME in Column 1.")
+    # prihdr.set('DETCHANS', detchans, "Total number of detector energy channels"\
+    #         " available")
+    # prihdu = fits.PrimaryHDU(header=prihdr)
 
     #####################
     ## Making FITS table
     #####################
+    #
+    # col1 = fits.Column(name='TIME', unit='Hz', format='D', array=good_time)
+    # col2 = fits.Column(name='CHANNEL', unit='(0-DETCHANS)', format='I', \
+    #         array=good_chan)
+    # col3 = fits.Column(name='PCUID', unit='(0-4)', format='I', array=good_pcu)
+    # cols = fits.ColDefs([col1, col2, col3])
+    # tbhdu = fits.BinTableHDU.from_columns(cols)
 
-    col1 = fits.Column(name='TIME', unit='Hz', format='D', array=good_time)
-    col2 = fits.Column(name='CHANNEL', unit='(0-DETCHANS)', format='I', \
-            array=good_chan)
-    col3 = fits.Column(name='PCUID', unit='(0-4)', format='I', array=good_pcu)
-    cols = fits.ColDefs([col1, col2, col3])
-    tbhdu = fits.BinTableHDU.from_columns(cols)
-
-    ## If the file already exists, remove it
-    assert out_file[-4:].lower() == "fits", "ERROR: Standard output file must "\
-            "have extension '.fits'."
-    if os.path.isfile(out_file):
-        os.remove(out_file)
-
-    ############################
-    ## Writing to the FITS file
-    ############################
-
-    thdulist = fits.HDUList([prihdu, tbhdu])
-    thdulist.writeto(out_file)
+    # ## If the file already exists, remove it
+    # assert out_file[-4:].lower() == "fits", "ERROR: Standard output file must "\
+    #         "have extension '.fits'."
+    # if os.path.isfile(out_file):
+    #     os.remove(out_file)
+    #
+    # ############################
+    # ## Writing to the FITS file
+    # ############################
+    #
+    # thdulist = fits.HDUList([prihdu, tbhdu])
+    # thdulist.writeto(out_file)
 
 
 ################################################################################
@@ -184,23 +194,34 @@ def main(event_list, gti_file, out_file):
         print "\tERROR: File does not exist: %s" % event_list
         exit()
 
-    data_header = data_hdu[1].header
+    out_table = Table()
+    out_table.meta = data_hdu[1].header
     data = data_hdu[1].data
     orig_cols = data_hdu[1].columns
     data_hdu.close()
+
+    out_table.meta['TYPE'] = "GTI`d event list"
+    out_table.meta['RAW_EVT'] = event_list
+    out_table.meta['GTI_FILE'] = gti_file
+    out_table.meta['NOTES'] = "TIMEZERO applied to TIME in Column 1."
+
 
     ###########################################################
     ## Getting TIMEZERO the number of detector energy channels
     ###########################################################
 
-    timezero = float(data_header['TIMEZERO'])
-
-    if '64M' in data_header['DATAMODE'] and 'E_' in data_header['DATAMODE']:
+    if '64M' in out_table.meta['DATAMODE'] and 'E_' in out_table.meta['DATAMODE']:
         detchans = 64
-    elif 'Standard' in data_header['DATAMODE']:
+    elif '32M' in out_table.meta['DATAMODE'] and 'E_' in out_table.meta['DATAMODE']:
+        detchans = 32
+    elif '16B' in out_table.meta['DATAMODE'] and 'E_' in out_table.meta['DATAMODE']:
+        detchans = 16
+    elif 'Standard' in out_table.meta['DATAMODE']:
         detchans = 129
     else:
         detchans = 256
+
+    out_table.meta['DETCHANS'] = detchans
 
     ########################
     ## Opening the GTI file
@@ -224,7 +245,7 @@ def main(event_list, gti_file, out_file):
 # 	PCU0 = data.field('PCUID') == 0   
 # 	data = data[np.ma.mask_or(PCU2,PCU0)]
 
-    data_time = np.add(data.field('TIME'), timezero)
+    data_time = np.add(data.field('TIME'), out_table.meta['TIMEZERO'])
     data_chan = data.field('CHANNEL')
     data_pcu = data.field('PCUID')
     good_time = np.asarray([])
@@ -239,8 +260,8 @@ def main(event_list, gti_file, out_file):
 
     for t in gti:
 
-        gti_start = t[0] + timezero # Front of the start-time-bin
-        gti_stop = t[1] + timezero # Back of the end-time-bin
+        gti_start = t[0] + out_table.meta['TIMEZERO']  # Front of the start-time-bin
+        gti_stop = t[1] + out_table.meta['TIMEZERO']  # Back of the end-time-bin
 
         if data_starttime < gti_start and \
                 data_starttime < gti_stop and \
@@ -282,24 +303,18 @@ def main(event_list, gti_file, out_file):
     assert np.shape(good_time) == np.shape(good_chan)
     assert np.shape(good_chan) == np.shape(good_pcu)
 
+    out_table.add_column(Column(data=good_time, name='TIME'))
+    out_table.add_column(Column(data=good_chan, name='CHANNEL'))
+    out_table.add_column(Column(data=good_pcu, name='PCUID'))
+
     ##########
     ## Output
     ##########
 
-    # if out_file[-4:].lower() == "fits":
-
     assert out_file[-4:].lower() == "fits", "ERROR: Output file must be FITS."
-    fits_out(out_file, gti_file, event_list, detchans, data_header, \
-            good_time, good_chan, good_pcu)
+    out_table.write(out_file, overwrite=True)
 
-    # elif out_file[-3:].lower() == "dat":
-    #
-    #     dat_out(out_file, gti_file, event_list, detchans, good_time, good_chan,\
-    #             good_pcu)
-    # else:
-    #
-    #     raise Exception("ERROR: File type of GTI'd event list must be .dat or "\
-    #             ".fits.")
+    # fits_out(out_file, out_table, good_time, good_chan, good_pcu)
 
 
 ################################################################################
@@ -310,9 +325,7 @@ if __name__ == "__main__":
     #####################################################
 
     parser = argparse.ArgumentParser(usage="applygti.py eventlist gtifile "\
-            "outfile", description="Applies a GTI (good time interval) to an "\
-            "RXTE decoded event list. Corrects for TIMEZERO. Does not select "\
-            "PCU.")
+            "outfile", description=__doc__)
 
     parser.add_argument('eventlist', help="The full path of the decoded event "\
             "list file.")
