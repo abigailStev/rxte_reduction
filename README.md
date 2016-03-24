@@ -1,8 +1,11 @@
 # rxte_reduction repository
 
-All of this is designed for RXTE PCA event-mode data. Heasoft must be installed
-and CALDB must be in working order. This code takes RXTE data, filters it, and 
-makes it into a nice FITS-format event list, to be read by spectral-timing code.
+All of this is designed for RXTE PCA event-mode data. HEASOFT must be installed
+and CALDB must be in working order. 
+
+This code downloads RXTE data from a list of obsIDs, scans it to see what types
+of data are available, filters it, and makes it into a nice astropy table FITS 
+event list, to be read by spectral-timing code.
 
 
 ## Contents
@@ -16,14 +19,12 @@ Analyzes many filter files to determine how many PCUs were on for how long,
 and other fun things. Used in reduce_alltogether.sh.
 
 ### apply_gti.py
-Applies a GTI (good times interval) to an event list. Used in good_event.sh.
+Applies a GTI (good times interval) to an event list and saves the filtered 
+event list as an astropy table to a FITS file. Used in good_event.sh.
 
 ### channel_to_energy.py 
 Converts e-c_table.txt into a list of keV energy boundaries of each detector 
 mode channel. Used for cross_correlation/plot_2d.py, for example.
-
-### data_dl.sh
-Don't use this one.
 
 ### download_obsIDs.sh
 Downloads RXTE data given a list of observation IDs with extension ".lst". Used
@@ -61,10 +62,9 @@ Looks at and plots which PCUs are on at what times during an observation
 
 ### pipeline.sh
 This is my master script. It runs: download_obsIDs.sh, xtescan.sh, 
-rxte_reduce_data.sh, plot_std2_lightcurve.py, good_events.sh, loop_powerspec.py
-and run_multi_powerspec.py (in power_spectra directory), loop_ccf.sh and 
-run_multi_ccf.sh (in cross_correlation directory), and run_energyspec.sh and 
-sed_fitting.sh (in energy_spectra directory).
+rxte_reduce_data.sh, plot_std2_lightcurve.py, and good_events.sh. Currently
+does not run power spectral code, cross spectral code, and energy spectral 
+fitting code.
 
 ### plot_std2_lightcurve.py
 Plots a Standard-2 light curve (16s binning) to show general trends of the data.
@@ -74,10 +74,11 @@ Used in pipeline.sh.
 This document.
 
 ### reduce_alltogether.sh
-This reduces multiple obsIDs all together (as the name implies). Merges filter 
-files, makes GTI from merged filter files, extracts a mean event-mode spectrum,
-makes a mean Standard-2 spectrum and lightcurve, runs event_mode_bkgd.sh and 
-analyze_filters.sh.
+This reduces multiple RXTE obsIDs all together (as the name implies). Merges 
+filter files, makes GTI from merged filter files, extracts a mean event-mode 
+spectrum, makes a mean Standard-2 spectrum and lightcurve, runs 
+event_mode_bkgd.sh and analyze_filters.sh. Open it up and be sure that some of
+these things aren't commented out if you want to use them.
 
 ### rxte_reduce_data.sh
 Reduces RXTE raw data. Often times, chunks are commented out since I don't want 
@@ -89,8 +90,8 @@ the above for each obsID, and for everything all together. Used in pipeline.sh.
 Uses many of the smaller scripts in this directory.
 
 ### xtescan.sh
-Determines the configuration/parameters/settings of each observation for a list
-of obsIDs. Used in pipeline.sh.
+Determines the data mode and configuration/parameters/settings of each obsID in
+the downloaded data. Used in pipeline.sh.
 
 
 ## Authors and License
@@ -98,7 +99,7 @@ of obsIDs. Used in pipeline.sh.
 
 Pull requests are welcome!
 
-All code is Copyright 2013-2015 The Authors, and is distributed under the MIT 
+All code is Copyright 2013-2016 The Authors, and is distributed under the MIT 
 Licence. See LICENSE for details. If you are interested in the further 
 development of rxte_reduction, please [get in touch via the issues]
 (https://github.com/abigailstev/rxte_reduction/issues)!
