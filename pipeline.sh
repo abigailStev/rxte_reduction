@@ -9,11 +9,11 @@
 ## Change the directory names and specifiers before the double '#' row to best
 ## suit your setup.
 ## 
-## Notes: HEASOFT 6.14 or higher, bash 3.* and Python 2.7 (with supporting 
-##        libraries) must be installed in order to run this script. Internet 
+## Notes: HEASOFT 6.19.*, bash 3.*, and conda 4.0.7+ with python 2.7.*
+## 		  must be installed in order to run this script. Internet
 ##        access is required for most setups of CALDB.
 ##
-## Author: Abigail Stevens <A.L.Stevens at uva.nl>, 2014-2016
+## Author: Abigail Stevens <A.L.Stevens at uva.nl>, 2014-2017
 ## 
 ################################################################################
 
@@ -27,7 +27,7 @@ ps_dir="$home_dir/Dropbox/Research/power_spectra"  ## Directory with power
 ccf_dir="$home_dir/Dropbox/Research/cross_correlation"  ## Directory with ccf 
 														## code
 es_dir="$home_dir/Dropbox/Research/energy_spectra"  ## Directory with energy 
-													## spectrum code
+													## spectral code
 sim_dir="$home_dir/Dropbox/Research/simulate"  ## Directory with QPO simulation 
 											   ## code
 list_dir="$home_dir/Dropbox/Lists"  ## A folder of lists; tells which files 
@@ -39,21 +39,27 @@ out_dir_prefix="$home_dir/Reduced_data"  ## Prefix of output directory
 # prefix="GX339-BQPO"
 #prefix="4U1608"
 #prefix="XTE1859-BQPO"
-prefix="GX339-4HzCQPO"
+#prefix="GX339-4HzCQPO"
+prefix="GX339-HFsoft"
 #prefix="GRO1655-BQPO"
 #prefix="H1743-BQPO"
 #prefix="MAXI1659-BQPO"
 
 datamode="E_125us_64M_0_1s"
+#datamode="E_1ms_128M_50_8s"
+#datamode="SB_250us_0_35_2s"
+#datamode="SB_250us_36_249_2s"
 #datamode="E_500us_64M_0_1s"
 #datamode="E_62us_32M_36_1s"
+#datamode="D_1us_0_249_1024_64s_F"
 
-dt=32  ## Multiple of the time resolution of the data for ps and ccf
-numsec=32  ## Length of segments in seconds of Fourier segments for analysis
+dt=64  ## Multiple of the time resolution of the data for ps and ccf
+numsec=64  ## Length of segments in seconds of Fourier segments for analysis
 
 testing=0  ## 1 is yes, 0 is no
 # filtering="401:401" ## "no" for QPOs, or "lofreq:hifreq" in Hz for coherent pulsations
 filtering="no" ## "no" for QPOs, or "lofreq:hifreq" in Hz for coherent pulsations
+#filtering="3:10" ## "no" for QPOs, or "lofreq:hifreq" in Hz for coherent pulsations
 
 day=$(date +%y%m%d)  # make the date a string and assign it to 'day'
 # day="150128"
@@ -108,8 +114,8 @@ fi
 ################################################################################
 echo -e "\n--- Download data ---"
 
-echo ./download_obsIDs.sh "$obsID_list"
-"$script_dir"/download_obsIDs.sh "$obsID_list"
+#echo ./download_obsIDs.sh "$obsID_list"
+#"$script_dir"/download_obsIDs.sh "$obsID_list"
 
 
 ################################################################################
@@ -119,8 +125,8 @@ echo ./download_obsIDs.sh "$obsID_list"
 ################################################################################
 echo -e "\n--- Make list of files to be reduced ---"
 
-echo time ./xtescan.sh "${prefix}" "$obsID_list"
-time "$script_dir"/xtescan.sh "${prefix}" "$obsID_list"
+#echo time ./xtescan.sh "${prefix}" "$obsID_list"
+#time "$script_dir"/xtescan.sh "${prefix}" "$obsID_list"
 
 
 ################################################################################
@@ -135,9 +141,9 @@ echo "$(pwd)/run.log"
 echo "$(pwd)/progress.log"
 ## The first line is good for debugging with only one obsID
 ## The second line is for long runs. 
-# time "$script_dir"/rxte_reduce_data.sh "$newfile_list" "$obsID_list" "${prefix}"
-echo time ./rxte_reduce_data.sh "$newfile_list" "$obsID_list" "${prefix}" > run.log
-time "$script_dir"/rxte_reduce_data.sh "$newfile_list" "$obsID_list" "${prefix}" > run.log
+time "$script_dir"/rxte_reduce_data.sh "$newfile_list" "$obsID_list" "${prefix}"
+#echo time ./rxte_reduce_data.sh "$newfile_list" "$obsID_list" "${prefix}" > run.log
+#time "$script_dir"/rxte_reduce_data.sh "$newfile_list" "$obsID_list" "${prefix}" > run.log
 
 
 ################################################################################
@@ -203,8 +209,10 @@ cd "$es_dir"
 # echo time ./run_energyspec.sh "$prefix" "$dt" "$numsec" "$testing" "$day"
 # time "$es_dir"/run_energyspec.sh "$prefix" "$dt" "$numsec" "$testing" "$day"
 
-#echo time "$es_dir"/sed_fitting.sh "$prefix" "$dt" "$numsec" "$testing" "$day"
-#source "$es_dir"/sed_fitting.sh "$prefix" "$dt" "$numsec" "$testing" "$day"
+#echo time "$es_dir"/phasespec_fitting.sh "$prefix" "$dt" "$numsec" "$testing" \
+#        "$day"
+#source "$es_dir"/phasespec_fitting.sh "$prefix" "$dt" "$numsec" "$testing" \
+#        "$day"
 
 
 ################################################################################
@@ -225,4 +233,5 @@ cd "$sim_dir"
 echo -e "\nFinished pipeline.sh."
 cd "$current_dir"
 echo " "
+tput bel
 ################################################################################

@@ -5,10 +5,10 @@
 ## Extracts light curves and spectra for individual obsIDs, for Standard-2, 
 ## Standard-1, and event-mode data.
 ##
-## Notes: HEASOFT 6.14 (or higher), bash 3.*, and Python 2.7.* (with supporting
+## Notes: HEASOFT 6.21 (or higher), bash 3.*, and Python 2.7.* (with supporting
 ##        libraries) must be installed in order to run this script. 
 ##
-## Written by Abigail Stevens <A.L.Stevens at uva.nl>, 2015-2016
+## Written by Abigail Stevens <A.L.Stevens at uva.nl>, 2015-2017
 ## 
 ################################################################################
 
@@ -25,7 +25,7 @@ list_dir="${indivextract_args[0]}"
 out_dir="${indivextract_args[1]}"
 progress_log="${indivextract_args[2]}"
 gti_file="${indivextract_args[3]}"
-std2pcu2_cols="${indivextract_args[4]}"
+std2_cols="${indivextract_args[4]}"
 bitfile="${indivextract_args[5]}"
 
 ################################################################################
@@ -35,10 +35,13 @@ if (( $(echo $DYLD_LIBRARY_PATH | grep heasoft | wc -l) < 1 )); then
 	. $HEADAS/headas-init.sh
 fi
 
+echo "Running indiv_extract.sh"
+echo "Running indiv_extract.sh" >> $progress_log
+
 std2_list="$out_dir/std2.lst"
 vle_list="$out_dir/vle.lst"
 evt_list="$out_dir/evt.lst"	
-sa_cols="$out_dir/std2_cols.pcu"
+sa_cols="$out_dir/std2_cols.lst"
 
 ## If there are multiple event files per obsID with different mode prefixes,
 ## this program will overwrite it the next go-through, so it's all fine!
@@ -51,7 +54,7 @@ sa_cols="$out_dir/std2_cols.pcu"
 ls $out_dir/std2*.pca > $std2_list
 # ls $out_dir/vle*.pca > $vle_list
 ls $out_dir/evt*.pca > $evt_list
-cat "$std2pcu2_cols" > "$sa_cols"
+cat "${std2_cols}" > "${sa_cols}"
 
 ##############################
 ## Extracting Standard-2 data
@@ -69,7 +72,7 @@ else
 		gtiorfile=- \
 		gtiandfile="$gti_file" \
 		outroot="$out_dir/std2" \
-		columns=@"$sa_cols" \
+		columns=@"${sa_cols}" \
 		accumulate=ONE \
 		timecol=TIME \
 		binsz=16 \
@@ -95,13 +98,13 @@ else
 		echo -e "\tERROR: Std2 spectrum not made!"
 		echo -e "\tERROR: Std2 spectrum not made!" >> $progress_log
 	# 	continue
-	fi 
+	fi
 	if [ ! -e "$out_dir/std2.lc" ]; then
 		echo -e "\tERROR: Std2 light curve not made!"
 		echo -e "\tERROR: Std2 light curve not made!" >> $progress_log
 	# 	continue
 	fi
-	
+
 	echo "SAEXTRCT finished"
 fi
 
@@ -161,40 +164,92 @@ else
 	## May need to set lcbinarray to 800000 or INDEF if getting a segmentation
 	## fault.
 	## Don't put *any* spaces after the '\' end-of-line slashes. TGIF.
-	
-	seextrct lcbinarray=1600000 \
-		maxmiss=INDEF \
-		infile=@"$evt_list" \
-		gtiorfile=- \
-		gtiandfile="$gti_file" \
-		outroot="$out_dir/event" \
-		bitfile="$bitfile" \
-		timecol="TIME" \
-		columns="Event" \
-		multiple=yes \
-		binsz=1 \
-		printmode=SPECTRUM \
-		lcmode=RATE \
-		spmode=SUM \
-		timemin=INDEF \
-		timemax=INDEF \
-		timeint=INDEF \
-		chmin=INDEF \
-		chmax=INDEF \
-		chint=INDEF \
-		chbin=INDEF \
-		mode=ql
+#	if ! fgrep -q -e "(" $bitfile ; then
+#        seextrct lcbinarray=1600000 \
+#            maxmiss=INDEF \
+#            infile=@"$evt_list" \
+#            gtiorfile=- \
+#            gtiandfile="$gti_file" \
+#            outroot="$out_dir/event" \
+#            bitfile="$bitfile" \
+#            timecol="TIME" \
+#            columns="Event" \
+#            multiple=yes \
+#            binsz=1 \
+#            printmode=SPECTRUM \
+#            lcmode=RATE \
+#            spmode=SUM \
+#            timemin=INDEF \
+#            timemax=INDEF \
+#            timeint=INDEF \
+#            chmin=INDEF \
+#            chmax=INDEF \
+#            chint=INDEF \
+#            chbin=INDEF \
+#            mode=ql
+#
+#        if [ ! -e "$out_dir/event.lc" ] ; then
+#            echo -e "\tERROR: Event-mode light curve not made!"
+#            echo -e "\tERROR: Event-mode light curve not made!" >> $progress_log
+#        # 	continue
+#        fi
+#        if [ ! -e "$out_dir/event.pha" ] ; then
+#            echo -e "\tERROR: Event-mode spectrum not made!"
+#            echo -e "\tERROR: Event-mode spectrum not made!" >> $progress_log
+#        # 	continue
+#        fi
+#    else
+        echo "( or | in bitmask. Using FSELECT."
+        echo "( or | in bitmask. Using FSELECT." >> $progress_log
 
-	 if [ ! -e "$out_dir/event.lc" ] ; then
-	 	echo -e "\tERROR: Event-mode light curve not made!"
-	 	echo -e "\tERROR: Event-mode light curve not made!" >> $progress_log
-	 # 	continue
-	 fi
-	if [ ! -e "$out_dir/event.pha" ] ; then
-		echo -e "\tERROR: Event-mode spectrum not made!"
-		echo -e "\tERROR: Event-mode spectrum not made!" >> $progress_log
-	# 	continue
-	fi 
+        ## Fselect won't read in a list of files.
+        if [ -e "$out_dir/fsel_evt.lst" ] ; then rm "$out_dir/fsel_evt.lst" ; fi
+        touch "$out_dir/fsel_evt.lst"
+        num=1
+        for evtfile in $( cat ${evt_list} ); do
+            echo "FSEL NUM ${num}"
+            fselect $evtfile \
+                "$out_dir/event_fsel_${num}.fits" \
+                @"$bitfile" \
+                clobber=yes
+            echo "$out_dir/event_fsel_${num}.fits" >>  "$out_dir/fsel_evt.lst"
+            (( num++ ))
+        done
+        echo "Running seextrct on fselect."
+
+	    seextrct lcbinarray=1600000 \
+		    maxmiss=INDEF \
+		    infile=@"$out_dir/fsel_evt.lst" \
+		    gtiorfile=- \
+		    gtiandfile="$gti_file" \
+		    outroot="$out_dir/event" \
+		    timecol="TIME" \
+		    columns="Event" \
+		    multiple=yes \
+		    binsz=1 \
+		    printmode=SPECTRUM \
+		    lcmode=RATE \
+		    spmode=SUM \
+		    timemin=INDEF \
+		    timemax=INDEF \
+		    timeint=INDEF \
+		    chmin=INDEF \
+		    chmax=INDEF \
+		    chint=INDEF \
+		    chbin=INDEF \
+		    mode=ql
+
+		if [ ! -e "$out_dir/event.lc" ] ; then
+            echo -e "\tERROR: Event-mode light curve not made!"
+            echo -e "\tERROR: Event-mode light curve not made!" >> $progress_log
+        # 	continue
+        fi
+        if [ ! -e "$out_dir/event.pha" ] ; then
+            echo -e "\tERROR: Event-mode spectrum not made!"
+            echo -e "\tERROR: Event-mode spectrum not made!" >> $progress_log
+        # 	continue
+        fi
+#	fi
 
 	echo "SEEXTRCT finished"
 fi

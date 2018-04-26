@@ -4,18 +4,18 @@
 ##
 ## Final data reduction steps for all observation files together.
 ##
-## Notes: HEASOFT 6.14 (or higher), bash 3.* and Python 2.7.* (with supporting 
+## Notes: HEASOFT 6.21 (or higher), bash 3.* and Python 2.7.* (with supporting
 ##		  libraries) must be installed in order to run this script. Internet 
 ##        access is required for most setups of CALDB.
 ## 
-## Written by Abigail Stevens <A.L.Stevens at uva.nl>, 2015-2016
+## Written by Abigail Stevens <A.L.Stevens at uva.nl>, 2015-2017
 ## 
 ################################################################################
 
 if (( $# != 13 )); then
 	echo -e "\t\tUsage: ./reduce_alltogether.sh <list dir> <script dir> \
 <prefix> <progress log> <obsID list> <out dir prefix> <filter list> <filter \
-expression> <evt mode bkgd list> <se list> <sa list> <std2 pcu2 col list> \
+expression> <evt mode bkgd list> <se list> <sa list> <std2 col list> \
 <bitmask file>"
 	exit
 fi
@@ -34,7 +34,7 @@ filtex="${alltogether_args[7]}"
 evt_bkgd_list="${alltogether_args[8]}"
 se_list="${alltogether_args[9]}"
 sa_list="${alltogether_args[10]}"
-std2pcu2_cols="${alltogether_args[11]}"
+std2_cols="${alltogether_args[11]}"
 bitfile="${alltogether_args[12]}"
 
 ################################################################################
@@ -44,19 +44,23 @@ if (( $(echo $DYLD_LIBRARY_PATH | grep heasoft | wc -l) < 1 )); then
 	. $HEADAS/headas-init.sh
 fi
 
+echo "Running reduce_alltogether.sh"
+echo "Running reduce_alltogether.sh" >> $progress_log
+
+
 out_dir="$out_dir_prefix/${prefix}"
 filter_file="$out_dir/all.xfl"
 gti_file="$out_dir/all.gti"
 all_evt="$out_dir/all_evt.pha"
 all_std2="$out_dir/all_std2.pha"
-sa_cols="$out_dir/std2_cols.pcu"
+sa_cols="$out_dir/std2_cols.lst"
 evtpha_list="$out_dir/${prefix}_evtpha.lst"  ## Only used if num_evt >= 100
 
 ################################################################################
 ################################################################################
 
 if [ -e "$evtpha_list" ]; then rm "$evtpha_list"; fi; touch "$evtpha_list"
-cat "$std2pcu2_cols" > "$sa_cols"
+cat "$std2_cols" > "$sa_cols"
 
 ## Removing duplicates from the obsID list -- can happen if there are multiple
 ## orbits per obsID
@@ -153,33 +157,79 @@ elif (( $( wc -l < $se_list ) >= 100 )); then
 	
 ## If there are 0 < n < 100 event files, combine them in seextrct	
 else
-	seextrct lcbinarray=1600000 \
-		maxmiss=INDEF \
-		infile=@"$se_list" \
-		gtiorfile=- \
-		gtiandfile="$gti_file" \
-		outroot="${all_evt%.*}" \
-		bitfile="$bitfile" \
-		timecol="TIME" \
-		columns="Event" \
-		multiple=yes \
-		binsz=1 \
-		printmode=SPECTRUM \
-		lcmode=RATE \
-		spmode=SUM \
-		timemin=INDEF \
-		timemax=INDEF \
-		timeint=INDEF \
-		chmin=INDEF \
-		chmax=INDEF \
-		chint=INDEF \
-		chbin=INDEF \
-		mode=ql
+#	if ! fgrep -q -e "(" $bitfile ; then
+#
+#        seextrct lcbinarray=1600000 \
+#            maxmiss=INDEF \
+#            infile=@"$se_list" \
+#            gtiorfile=- \
+#            gtiandfile="$gti_file" \
+#            outroot="${all_evt%.*}" \
+#            bitfile="$bitfile" \
+#            timecol="TIME" \
+#            columns="Event" \
+#            multiple=yes \
+#            binsz=1 \
+#            printmode=SPECTRUM \
+#            lcmode=RATE \
+#            spmode=SUM \
+#            timemin=INDEF \
+#            timemax=INDEF \
+#            timeint=INDEF \
+#            chmin=INDEF \
+#            chmax=INDEF \
+#            chint=INDEF \
+#            chbin=INDEF \
+#            mode=ql
+#		if [ ! -e "$all_evt" ] ; then
+#		    echo -e "\tERROR: Total event-mode spectrum not made!"
+#		    echo -e "\tERROR: Total event-mode spectrum not made!" >> $progress_log
+#		fi
+#	else
+        echo "( or | in bitmask. Using FSELECT."
+        echo "( or | in bitmask. Using FSELECT." >> $progress_log
 
-	if [ ! -e "$all_evt" ] ; then
-		echo -e "\tERROR: Total event-mode spectrum not made!"
-		echo -e "\tERROR: Total event-mode spectrum not made!" >> $progress_log
-	fi  
+        ## Fselect won't read in a list of files.
+        if [ -e "$out_dir/se_fsel.lst" ] ; then rm "$out_dir/se_fsel.lst" ; fi
+        touch "$out_dir/se_fsel.lst"
+        num=1
+        for evtfile in $( cat ${se_list} ); do
+            echo "FSEL NUM ${num}"
+            fselect $evtfile \
+                "$out_dir/all_evt_fsel_${num}.fits" \
+                @"$bitfile" \
+                clobber=yes
+            echo "$out_dir/all_evt_fsel_${num}.fits" >>  "$out_dir/se_fsel.lst"
+            (( num++ ))
+        done
+        echo "Running seextrct on fselect."
+
+	    seextrct lcbinarray=1600000 \
+		    maxmiss=INDEF \
+		    infile=@"$out_dir/se_fsel.lst" \
+		    gtiorfile=- \
+		    gtiandfile="$gti_file" \
+		    outroot="${all_evt%.*}" \
+		    timecol="TIME" \
+		    columns="Event" \
+		    multiple=yes \
+		    binsz=1 \
+		    printmode=SPECTRUM \
+		    lcmode=RATE \
+		    spmode=SUM \
+		    timemin=INDEF \
+		    timemax=INDEF \
+		    timeint=INDEF \
+		    chmin=INDEF \
+		    chmax=INDEF \
+		    chint=INDEF \
+		    chbin=INDEF \
+		    mode=ql
+		if [ ! -e "$all_evt" ] ; then
+		    echo -e "\tERROR: Total event-mode spectrum not made!"
+		    echo -e "\tERROR: Total event-mode spectrum not made!" >> $progress_log
+		fi
+#	fi
 fi  ## End of 'if there are evt files in $se_list
 
 ##################################################
@@ -199,7 +249,7 @@ else
 		gtiorfile=- \
 		gtiandfile="$gti_file" \
 		outroot="${all_std2%.*}" \
-		columns=@"$sa_cols" \
+		columns=@"${sa_cols}" \
 		accumulate=ONE \
 		timecol="Time" \
 		binsz=16 \

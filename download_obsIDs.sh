@@ -6,15 +6,15 @@
 ## Requires a list of proposal IDs with the archive prefix, and for each
 ## proposal ID a corresponding list of obsIDs to download.
 ##
-## Usage: ./data_dl.sh <proposal_ID_list>
+## Usage: ./download_obsIDs.sh <proposal_ID_list>
 ##
-## Written by Abigail Stevens, A.L.Stevens@uva.nl, 2013-2015
+## Written by Abigail Stevens, A.L.Stevens@uva.nl, 2013-2017
 ## 
 ################################################################################
 
 ## Make sure the input arguments are ok
 if (( $# != 1 )); then
-    echo -e "\t\tUsage: ./data_dl.sh <proposal ID list>"
+    echo -e "\t\tUsage: ./download_obsIDs.sh <proposal ID list>"
     exit
 fi
 

@@ -14,10 +14,10 @@
 ## in it (~line 147). Uncomment the 'echo' line and comment the 'rm' line to 
 ## check what will be deleted. Be sure it's ok to erase it!
 ## 
-## Notes: HEASOFT 6.14 (or higher), bash 3.* and Python 2.7.* (with supporting 
-##		  libraries) must be installed in order to run this script.
+## Notes: HEASOFT 6.21.*, bash 3.*, and conda 4.0.7+ with python 2.7.*
+## 		  must be installed in order to run this script.
 ## 
-## Written by Abigail Stevens, A.L.Stevens at uva.nl, 2014-2015
+## Written by Abigail Stevens, A.L.Stevens at uva.nl, 2014-2017
 ## 
 ################################################################################
 

@@ -29,6 +29,7 @@ something_list="${analyzefilters_args[4]}"
 
 filter_tab="$out_dir/${prefix}_filters.dat"
 if [ -e "$filter_tab" ]; then rm "$filter_tab"; fi; touch "$filter_tab"
+echo "Running analyze_filters.sh"
 
 ################################################################################
 ################################################################################
@@ -83,8 +84,8 @@ fi
 echo python ./pcu_filter.py "$filter_list" "$prefix" "$out_dir"
 python "$script_dir"/pcu_filter.py "$filter_list" "$prefix" "$out_dir"
 		
- if [ -e "$out_dir/${prefix}_pcus_on.png" ]; then open "$out_dir/${prefix}_pcus_on.png"; fi
- if [ -e "$out_dir/${prefix}_filter_info.txt" ]; then open "$out_dir/${prefix}_filter_info.txt"; fi
+# if [ -e "$out_dir/${prefix}_pcus_on.png" ]; then open "$out_dir/${prefix}_pcus_on.png"; fi
+# if [ -e "$out_dir/${prefix}_filter_info.txt" ]; then open "$out_dir/${prefix}_filter_info.txt"; fi
 
 ################################################################################
 ## All done!

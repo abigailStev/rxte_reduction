@@ -17,12 +17,12 @@
 ## '#' row. Check to be sure it's ok they're erased! Uncomment the 'ls' 
 ## statements and comment the 'rm' statements to check what will be deleted.
 ## 
-## Notes: HEASOFT 6.14 (or higher), bash 3.* and Python 2.7.* (with supporting 
-##		  libraries) must be installed in order to run this script. Internet 
-##        access is required for most setups of CALDB.
+## Notes: HEASOFT 6.21.*, bash 3.*, and conda 4.0.7+ with python 2.7.*
+## 		  must be installed in order to run this script. Internet access is
+##        required for most setups of CALDB.
 ##
 ## Inspired by/Based on G. Lamer (gl@astro.soton.ac.uk)'s script 'xrbgetprod'
-## Written by Abigail Stevens <A.L.Stevens at uva.nl>, 2014-2016
+## Written by Abigail Stevens <A.L.Stevens at uva.nl>, 2014-2017
 ##
 ################################################################################
 
@@ -61,7 +61,9 @@ list_dir="$home_dir/Dropbox/Lists"  ## A folder of lists; tells which files
 current_dir=$(pwd)  ## The current directory
 # out_dir_prefix="$home_dir/Dropbox/Research/Data"  ## Prefix of output 
 													## directory (for Aeolus)
-out_dir_prefix="$home_dir/Reduced_data"  ## Prefix of output directory
+#out_dir_prefix="$home_dir/Reduced_data"  ## Prefix of output directory
+out_dir_prefix="$home_dir/Reduced_data/4U1608/PCUs234"
+khz_data_dir="$home_dir/Dropbox/Research/kHz_QPO_phase_res/kHz_data"
 ## out_dir is set to out_dir_prefix/prefix/obsID below in the big loop
 
 ################################################################################
@@ -70,11 +72,20 @@ progress_log="$current_dir/progress.log"  ## File with concise description of
 										  ## this script's progress
 filter_list="${out_dir_prefix}/${prefix}/all_filters.lst"
 evt_bkgd_list="${out_dir_prefix}/${prefix}/all_event_bkgd.lst"
+std2_bkgd_list="${out_dir_prefix}/${prefix}/all_std2_bkgd.lst"
 se_list="${out_dir_prefix}/${prefix}/all_evt.lst"
 sa_list="${out_dir_prefix}/${prefix}/all_std2.lst"
 
-std2pcu2_cols="$list_dir/std2_pcu2_cols.lst"
-bitfile="$list_dir/bitfile_evt_PCU2" ## Using bitfile_evt_PCU2 for only PCU2 photons
+#std2_cols="$list_dir/std2_cols.lst"
+#bitfile="$list_dir/bitfile_evt_PCU2" ## Using bitfile_evt_PCU2 for only PCU2 photons
+#std2_cols="$khz_data_dir/std2_cols_pcus234.lst"
+#bitfile="$khz_data_dir/bitfile_pcus234_alt"
+#std2_cols="$khz_data_dir/std2_cols_pcus01.lst"
+#bitfile="$khz_data_dir/bitfile_pcus01"
+std2_cols="$khz_data_dir/std2_cols_5pcus.lst"
+bitfile="$khz_data_dir/bitfile_5pcus"
+## Also need to change PCUs in event_mode_bkgd.sh for making response matrix
+## And possibly the out_dir_prefix above
 
 ## The bright bkgd model is good for > 40 counts/sec/pcu
 bkgd_model="$list_dir/pca_bkgd_cmbrightvle_eMv20051128.mdl"
@@ -85,10 +96,10 @@ saa_history="$list_dir/pca_saa_history"
 ## For saxj1808, to filter out the thermonuclear bursts
 # filtex="(PCU2_ON==1)&&(PCU0_ON==1)&&(elv>10)&&(offset<0.02)&&(VpX1LCntPcu2<=150)&&(VpX1RCntPcu2<=150)"
 
-## For GX339 QPOs; don't need to worry about time_since_saa since it's bright
-filtex="(PCU2_ON==1)&&(NUM_PCU_ON>=2)&&(elv>10)&&(offset<0.02)"
+## For GX339 QPOs & 10072 kHz QPO; don't need to worry about time_since_saa since it's bright
+#filtex="(PCU2_ON==1)&&(NUM_PCU_ON>=2)&&(elv>10)&&(offset<0.02)"
 #filtex="(PCU2_ON==1)&&(NUM_PCU_ON>=1)&&(elv>10)&&(offset<0.02)"
-#filtex="(PCU2_ON==1)&&(NUM_PCU_ON>=2)&&(elv>10)&&(offset<0.02)&&(TIME_SINCE_SAA>30)"
+filtex="(PCU2_ON==1)&&(NUM_PCU_ON>=2)&&(elv>10)&&(offset<0.02)&&(TIME_SINCE_SAA>30)"
 
 ## For j1808-1HzQPO; also use faint background model
 # filtex="(PCU2_ON==1)&&(NUM_PCU_ON>=2)&&(elv>10)&&(offset<0.02)&&(VpX1LCntPcu2<=150)&&(VpX1RCntPcu2<=150)&&(TIME_SINCE_SAA>30)&&(ELECTRON2<0.1)"
@@ -163,32 +174,34 @@ for newfile in $( cat $newfilelist ); do
 	
 	filter_file="$out_dir/filter.xfl"
 	gti_file="$out_dir/gti_file.gti"
+#	filter_file="$home_dir/Reduced_data/4U1608/10072-05-01-00/filter.xfl"
+#	gti_file="$home_dir/Reduced_data/4U1608/10072-05-01-00/gti_file.gti"
 
 	########################
 	## Making a filter file
 	########################
 	
 	if [ ! -e "$filter_file" ] ; then  ## If the filter file doesn't exist
-	
+
 		echo "Making a filter file."
-		
+
 		## Running xtefilt to make the filter file
 		xtefilt -a "$list_dir"/appid.lst \
 			-o $obsID \
 			-p "$obs_dir" \
 			-t 16 \
 			-f "${filter_file%.*}" \
-			-c   
-		
+			-c
+
 		if [ ! -e "$filter_file" ]; then  ## Filter file wasn't made; Give error
 			echo -e "\tERROR: Filter file not made!"
 			echo -e "\tERROR: Filter file not made!" >> $progress_log
 			continue
 		fi
-		
+
 		echo "Filter file made." >> $progress_log
 		echo "filter_file = $filter_file"
-	
+
 	fi  ## End of 'if filter file wasn't made'
 	echo "$filter_file" >> $filter_list
 	
@@ -269,8 +282,9 @@ for newfile in $( cat $newfilelist ); do
 	gtibkgd_args[6]="'$filtex'"
 	gtibkgd_args[7]="$bkgd_model"
 	gtibkgd_args[8]="$saa_history"
-	gtibkgd_args[9]="$std2pcu2_cols"
+	gtibkgd_args[9]="$std2_cols"
 	gtibkgd_args[10]="$evt_bkgd_list"
+	gtibkgd_args[11]="$std2_bkgd_list"
 
 	echo ./gti_and_bkgd.sh "${gtibkgd_args[@]}"
 	gtibkgd_args[6]="$filtex"
@@ -280,16 +294,16 @@ for newfile in $( cat $newfilelist ); do
 	## Built-in extraction of Standard-2f and event-mode data
 	##########################################################
 	
-	indivextract_args=()
-	indivextract_args[0]="$list_dir"
-	indivextract_args[1]="$out_dir"
-	indivextract_args[2]="$progress_log"
-	indivextract_args[3]="$gti_file"
-	indivextract_args[4]="$std2pcu2_cols"
-	indivextract_args[5]="$bitfile"
-	
-  	echo ./indiv_extract.sh "${indivextract_args[@]}"
- 	"$script_dir"/indiv_extract.sh "${indivextract_args[@]}"
+#	indivextract_args=()
+#	indivextract_args[0]="$list_dir"
+#	indivextract_args[1]="$out_dir"
+#	indivextract_args[2]="$progress_log"
+#	indivextract_args[3]="$gti_file"
+#	indivextract_args[4]="$std2_cols"
+#	indivextract_args[5]="$bitfile"
+#
+#  	echo ./indiv_extract.sh "${indivextract_args[@]}"
+# 	"$script_dir"/indiv_extract.sh "${indivextract_args[@]}"
 
 	echo -e "Finished run for obsID=$obsID \n"				
 	echo -e "Finished run for obsID=$obsID \n" >> $progress_log
@@ -314,7 +328,7 @@ alltogether_args[7]="'$filtex'"  ## needs quotes for echo, but no quotes for the
 alltogether_args[8]="$evt_bkgd_list"
 alltogether_args[9]="$se_list"
 alltogether_args[10]="$sa_list"
-alltogether_args[11]="$std2pcu2_cols"
+alltogether_args[11]="$std2_cols"
 alltogether_args[12]="$bitfile"
 
 echo ./reduce_alltogether.sh "${alltogether_args[@]}"

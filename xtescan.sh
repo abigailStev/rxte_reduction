@@ -2,7 +2,7 @@
 
 ################################################################################
 ##
-## This bash version was written by Abigail Stevens, 2015-2016
+## This bash version was written by Abigail Stevens, 2015-2017
 ## 
 ## Based on xtescan2 by Simon Vaughan 2007, modified by Phil Uttley to
 ## determine configs for a list of obs-IDs rather than a single 
@@ -10,6 +10,10 @@
 ##
 ## Bash script to extract PCA/EA configurations from entire proposal-object set
 ## of XTE data (using FTOOLS)
+##
+## Notes: HEASOFT 6.19.*, bash 3.*, and conda 4.0.7+ with python 2.7.*
+## 		  must be installed in order to run this script.
+##
 ##
 ## Calling sequence:
 ##    ./xtescan.sh <filename prefix> <obsid list> 

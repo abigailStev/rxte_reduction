@@ -7,10 +7,10 @@
 ## by energy channel, and making the response matrix for good measure (which
 ## also creates chan.txt, the file telling how to re-bin the energy channels).
 ##
-## Notes: HEASOFT 6.14 (or higher), bash 3.*, and Python 2.7.* (with supporting
+## Notes: HEASOFT 6.21 (or higher), bash 3.*, and Python 2.7.* (with supporting
 ##        libraries) must be installed in order to run this script. 
 ## 
-## Written by Abigail Stevens, A.L.Stevens at uva.nl, 2014-2015 
+## Written by Abigail Stevens, A.L.Stevens at uva.nl, 2014-2017
 ## 
 ################################################################################
 
@@ -76,13 +76,13 @@ echo "Background spectrum: $ub_bkgd.pha"
 
 echo "Making a response matrix."
 echo "Making a response matrix." >> $progress_log
-rsp_matrix="$out_dir/PCU2.rsp"
+rsp_matrix="$out_dir/evt_PCUs234.rsp"
 
 # if [ -e "$rsp_matrix" ]; then
 # 	echo "Response matrix already exists."
 # elif [ -e "$all_evt" ]; then
 if [ -e "$all_evt" ]; then
-	pcarsp -f "$all_evt" -a "$filter_file" -l all -j y -p 2 -m n -n "$rsp_matrix" -z
+	pcarsp -f "$all_evt" -a "$filter_file" -l all -j y -p 2-4 -m y -n "$rsp_matrix" -z
 else
 	echo -e "\tERROR: pcarsp was not run. Event-mode spectrum of all obsIDs does not exist."
 	echo -e "\tERROR: pcarsp was not run. Event-mode spectrum of all obsIDs does not exist." >> $progress_log

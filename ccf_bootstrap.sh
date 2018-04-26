@@ -2,18 +2,18 @@
 
 ################################################################################
 ##
-## Bootstrapping errors on CCF for testing SED fits. This is basically the 
+## Bootstrapping errors on CCF for testing spectral fits. This is basically the
 ## second half of pipeline.sh but for bootstrapping.
 ##
 ## Change the directory names and specifiers before the double '#' row to best
 ## suit your setup. Also need to check these within run_bootstrap_ccf.sh, 
 ## sed_fit_bootstrap.sh, and simulate_qpo_bootstrap.sh.
 ## 
-## Notes: HEASOFT 6.14 or higher, bash 3.* and Python 2.7 (with supporting 
-##        libraries) must be installed in order to run this script. Internet 
+## Notes: HEASOFT 6.19.*, bash 3.*, and conda 4.0.7+ with python 2.7.*
+## 		  must be installed in order to run this script.  Internet
 ##        access is required for most setups of CALDB.
 ##
-## Written by Abigail Stevens <A.L.Stevens at uva.nl>, 2015
+## Written by Abigail Stevens <A.L.Stevens at uva.nl>, 2015-2016
 ## 
 ################################################################################
 
@@ -77,8 +77,8 @@ cd "$ccf_dir"
 echo -e "\n--- Energy spectra ---"
 cd "$es_dir"
 
-#source "$es_dir"/sed_fit_bootstrap.sh "$prefix" "$dt" "$numsec" "$testing" \
-# 	"$day" "$boot_num"
+#source "$es_dir"/bootstrap_phasespec_fit.sh "$prefix" "$dt" "$numsec" \
+#       "$testing" "$day" "$boot_num"
 
 ################################################################################
 ##																			  ##
